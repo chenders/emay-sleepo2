@@ -1,6 +1,6 @@
 {
   "name": "@groundeffect/emay-sleepo2",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "BLE client and CSV parser for the EMAY SleepO2 pulse oximeter",
   "license": "MIT",
   "author": "Ground Effect Software, LLC",

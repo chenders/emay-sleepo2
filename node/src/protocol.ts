@@ -3,7 +3,7 @@
  * No Bluetooth, no platform dependencies.
  */
 
-import { Reading } from "./types";
+import { Reading } from "./types.js";
 
 // ---- BLE identifiers ----
 export const SERVICE_UUID = "ff12";
