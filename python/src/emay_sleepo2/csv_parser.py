@@ -26,7 +26,6 @@ class DSTFoldCorrector:
     FOLD_DURATION: float = 3600.0  # 1 hour
 
     def __init__(self, tz: timezone | None = None):
-        import time as _time
         # Store seconds offset from UTC for DST transition detection.
         # We use isdst to detect whether the timezone is currently in DST.
         self._tz = tz
@@ -63,10 +62,6 @@ class DSTFoldCorrector:
 
 def _clocks_fell_back(instant: datetime, tz: timezone) -> bool:
     """True only when the timezone transitioned clocks back near instant."""
-    try:
-        import time as _time
-    except ImportError:
-        return False
     # Check if instant is in DST and 1 hour earlier is not —
     # this is a heuristic for fall-back transition proximity.
     before = instant - timedelta(hours=1)

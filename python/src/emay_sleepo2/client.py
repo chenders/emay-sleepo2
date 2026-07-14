@@ -13,7 +13,7 @@ from bleak.backends.characteristic import BleakGATTCharacteristic
 
 from .protocol import (
     SERVICE_UUID, WRITE_UUID, NOTIFY_UUID, NAME_PREFIX,
-    HEARTBEAT, START_REALTIME, START_SEQUENCE, STOP_REALTIME,
+    HEARTBEAT, START_SEQUENCE, STOP_REALTIME,
     parse_reading,
 )
 from .types import Reading, Status, MinuteSample

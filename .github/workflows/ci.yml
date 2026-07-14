@@ -36,7 +36,7 @@ jobs:
       - name: Lint (ruff)
         run: pip install ruff && ruff check src/ tests/ || true
       - name: Test
-        run: python -m pytest tests/ -v
+        run: pip install pytest && python -m pytest tests/ -v
 
   # ---- Node.js ----
   node-test:

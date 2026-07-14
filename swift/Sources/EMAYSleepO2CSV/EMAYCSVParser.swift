@@ -40,13 +40,13 @@ public enum EMAYCSVParser {
     // MARK: - Configuration
 
     /// Timezone for interpreting wall-clock timestamps. Default: system local.
-    public static var timezone: TimeZone = .current
+    public nonisolated(unsafe) static var timezone: TimeZone = .current
 
     /// Whether to correct timestamps across DST fall-back folds.
     /// When true, the repeated hour during clocks-back is detected and
     /// corrected so samples arrive in physical (monotonic) order.
     /// Default: true.
-    public static var correctDSTFold: Bool = true
+    public nonisolated(unsafe) static var correctDSTFold: Bool = true
 
     // MARK: - Public entry points
 

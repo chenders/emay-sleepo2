@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import threading
-from datetime import datetime, timedelta
-from typing import Callable, List, Optional
+from datetime import datetime
+from typing import List, Optional
 
 from .types import MinuteSample, Reading
 

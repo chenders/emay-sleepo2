@@ -1,7 +1,7 @@
 """Tests for EMAY CSV parser."""
 import pytest
 from emay_sleepo2.csv_parser import parse_csv, DSTFoldCorrector
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 
 
 def test_parse_valid():

@@ -1,7 +1,5 @@
 """Tests for EMAY SleepO2 protocol."""
-import pytest
-from emay_sleepo2.protocol import parse_reading, checksum, command
-from emay_sleepo2.types import Reading
+from emay_sleepo2.protocol import parse_reading, checksum
 
 
 def _frame(pr: int, spo2: int) -> bytes:
