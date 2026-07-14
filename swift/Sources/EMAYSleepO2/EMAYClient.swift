@@ -417,8 +417,8 @@ extension EMAYClient: CBPeripheralDelegate {
     ) {
         let identifier = peripheral.identifier
         let errMsg = error?.localizedDescription
-        let writeUUID = CBUUID(string: EMAYProtocol.writeUUID)
-        let notifyUUID = CBUUID(string: EMAYProtocol.notifyUUID)
+        nonisolated(unsafe) let writeUUID = CBUUID(string: EMAYProtocol.writeUUID)
+        nonisolated(unsafe) let notifyUUID = CBUUID(string: EMAYProtocol.notifyUUID)
         Task { @MainActor [weak self] in
             guard let self, identifier == self.peripheral?.identifier else { return }
             if let errMsg {
@@ -441,7 +441,7 @@ extension EMAYClient: CBPeripheralDelegate {
         didUpdateNotificationStateFor characteristic: CBCharacteristic,
         error: Error?
     ) {
-        let chUUID = characteristic.uuid
+        nonisolated(unsafe) let chUUID = characteristic.uuid
         let isNotifying = characteristic.isNotifying
         let errMsg = error?.localizedDescription
         Task { @MainActor [weak self] in
@@ -487,8 +487,8 @@ extension EMAYClient: CBPeripheralDelegate {
         didUpdateValueFor characteristic: CBCharacteristic,
         error: Error?
     ) {
-        let chUUID = characteristic.uuid
-        let data = characteristic.value.flatMap { Data($0) }
+        nonisolated(unsafe) let chUUID = characteristic.uuid
+        nonisolated(unsafe) let data = characteristic.value.flatMap { Data($0) }
         Task { @MainActor [weak self] in
             guard let self,
                   chUUID == CBUUID(string: EMAYProtocol.notifyUUID),

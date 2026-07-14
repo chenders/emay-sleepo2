@@ -30,6 +30,7 @@ pub struct EMAYClient {
     // Configuration
     heartbeat_interval: Duration,
     stale_timeout: Duration,
+    #[allow(dead_code)]
     auto_reconnect: bool,
 }
 
