@@ -130,11 +130,11 @@ namespace, a Sonatype account, and GPG signing.
 1. Go to <https://issues.sonatype.org> → Sign up.
 2. Create a **New Project** ticket under the **Community Support — Open
    Source Project Repository Hosting (OSSRH)** project.
-   - **Group Id**: `com.anxietywatch` (or `io.github.yourusername`)
+   - **Group Id**: `com.groundeffectsoftware.com` (or `io.github.yourusername`)
    - **Project URL**: `https://github.com/chenders/emay-sleepo2`
    - **SCM url**: `https://github.com/chenders/emay-sleepo2.git`
 3. A human at Sonatype approves it (typically within 1 business day).
-   You need to prove you control the `com.anxietywatch` domain (a TXT
+   You need to prove you control the `com.groundeffectsoftware.com` domain (a TXT
    record or a temporary GitHub repo works).
 4. Once approved, you can publish artifacts under that group ID.
 
@@ -199,7 +199,7 @@ Subsequent publishes can be automated with the
 If the Sonatype process is too heavy, use JitPack as a shortcut:
 
 1. No account setup — just push to GitHub.
-2. Users add: `implementation("com.github.anxietywatch:emay-sleepo2:v1.0.0")`
+2. Users add: `implementation("com.github.chenders:emay-sleepo2:v1.0.0")`
 3. JitPack builds on first request and caches.
 
 Downside: less cache locality (each user's first build pulls from JitPack).
