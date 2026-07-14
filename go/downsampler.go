@@ -28,8 +28,12 @@ func (d *LiveDownsampler) Add(r Reading) []MinuteSample {
 	}
 
 	d.currentMinute = &minute
-	if r.SpO2 != nil { d.spo2Vals = append(d.spo2Vals, float64(*r.SpO2)) }
-	if r.Pulse != nil { d.pulseVals = append(d.pulseVals, float64(*r.Pulse)) }
+	if r.SpO2 != nil {
+		d.spo2Vals = append(d.spo2Vals, float64(*r.SpO2))
+	}
+	if r.Pulse != nil {
+		d.pulseVals = append(d.pulseVals, float64(*r.Pulse))
+	}
 	return flushed
 }
 
@@ -43,12 +47,16 @@ func (d *LiveDownsampler) Flush() []MinuteSample {
 }
 
 func (d *LiveDownsampler) finalize() []MinuteSample {
-	if d.currentMinute == nil { return nil }
+	if d.currentMinute == nil {
+		return nil
+	}
 	var samples []MinuteSample
 
 	if len(d.spo2Vals) >= d.MinSamplesPerMinute {
 		sum := 0.0
-		for _, v := range d.spo2Vals { sum += v }
+		for _, v := range d.spo2Vals {
+			sum += v
+		}
 		samples = append(samples, MinuteSample{
 			MinuteStart: *d.currentMinute,
 			MetricType:  "SpO2",
@@ -59,7 +67,9 @@ func (d *LiveDownsampler) finalize() []MinuteSample {
 
 	if len(d.pulseVals) >= d.MinSamplesPerMinute {
 		sum := 0.0
-		for _, v := range d.pulseVals { sum += v }
+		for _, v := range d.pulseVals {
+			sum += v
+		}
 		samples = append(samples, MinuteSample{
 			MinuteStart: *d.currentMinute,
 			MetricType:  "PulseRate",

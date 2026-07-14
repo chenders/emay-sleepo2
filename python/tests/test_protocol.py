@@ -1,4 +1,5 @@
 """Tests for EMAY SleepO2 protocol."""
+
 from emay_sleepo2.protocol import parse_reading, checksum
 
 
@@ -33,7 +34,7 @@ class TestParseReading:
         assert r.spo2 == 98
 
     def test_wrong_length(self):
-        assert parse_reading(b'\xEB\x01\x05\x3E\x62\x7F') is None
+        assert parse_reading(b"\xeb\x01\x05\x3e\x62\x7f") is None
 
     def test_bad_header(self):
         raw = bytearray([0x00, 0x01, 0x05, 62, 98, 0x7F, 0x00, 0x00])

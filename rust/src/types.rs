@@ -17,7 +17,11 @@ impl Reading {
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs_f64();
-        Self { spo2, pulse, timestamp_secs: ts }
+        Self {
+            spo2,
+            pulse,
+            timestamp_secs: ts,
+        }
     }
 }
 
@@ -36,7 +40,10 @@ pub enum Status {
 
 impl Status {
     pub fn is_active(&self) -> bool {
-        matches!(self, Status::Scanning | Status::Connecting | Status::Streaming)
+        matches!(
+            self,
+            Status::Scanning | Status::Connecting | Status::Streaming
+        )
     }
 }
 

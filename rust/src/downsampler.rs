@@ -26,13 +26,19 @@ impl LiveDownsampler {
         let minute = start_of_minute(reading.timestamp_secs);
         let mut flushed = Vec::new();
 
-        if let Some(cur) = self.current_minute && minute != cur {
-                flushed = self.finalize_locked();
-            }
+        if let Some(cur) = self.current_minute
+            && minute != cur
+        {
+            flushed = self.finalize_locked();
+        }
 
         self.current_minute = Some(minute);
-        if let Some(s) = reading.spo2 { self.spo2_values.push(s as f64); }
-        if let Some(p) = reading.pulse { self.pulse_values.push(p as f64); }
+        if let Some(s) = reading.spo2 {
+            self.spo2_values.push(s as f64);
+        }
+        if let Some(p) = reading.pulse {
+            self.pulse_values.push(p as f64);
+        }
         flushed
     }
 
@@ -46,7 +52,9 @@ impl LiveDownsampler {
     }
 
     fn finalize_locked(&mut self) -> Vec<MinuteSample> {
-        let Some(minute) = self.current_minute else { return vec![] };
+        let Some(minute) = self.current_minute else {
+            return vec![];
+        };
         let mut samples = Vec::new();
 
         let spo2_count = self.spo2_values.len();
@@ -83,7 +91,11 @@ mod tests {
 
     fn reading(spo2: Option<u8>, pulse: Option<u8>, minute: u64, second: u64) -> Reading {
         let ts = (minute * 60 + second) as f64;
-        Reading { spo2, pulse, timestamp_secs: ts }
+        Reading {
+            spo2,
+            pulse,
+            timestamp_secs: ts,
+        }
     }
 
     #[test]

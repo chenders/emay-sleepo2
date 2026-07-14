@@ -21,7 +21,10 @@ export class LiveDownsampler {
     const minute = startOfMinute(reading.timestamp);
     const flushed: MinuteSample[] = [];
 
-    if (this.currentMinute !== null && minute.getTime() !== this.currentMinute.getTime()) {
+    if (
+      this.currentMinute !== null &&
+      minute.getTime() !== this.currentMinute.getTime()
+    ) {
       flushed.push(...this.finalize());
     }
 
@@ -45,7 +48,8 @@ export class LiveDownsampler {
     const samples: MinuteSample[] = [];
 
     if (this.spo2Values.length >= this.minimumSamplesPerMinute) {
-      const mean = this.spo2Values.reduce((a, b) => a + b, 0) / this.spo2Values.length;
+      const mean =
+        this.spo2Values.reduce((a, b) => a + b, 0) / this.spo2Values.length;
       samples.push({
         minuteStart: this.currentMinute,
         metricType: "SpO2",
@@ -55,7 +59,8 @@ export class LiveDownsampler {
     }
 
     if (this.pulseValues.length >= this.minimumSamplesPerMinute) {
-      const mean = this.pulseValues.reduce((a, b) => a + b, 0) / this.pulseValues.length;
+      const mean =
+        this.pulseValues.reduce((a, b) => a + b, 0) / this.pulseValues.length;
       samples.push({
         minuteStart: this.currentMinute,
         metricType: "PulseRate",

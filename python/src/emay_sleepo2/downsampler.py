@@ -64,18 +64,10 @@ class LiveDownsampler:
         samples: List[MinuteSample] = []
         if len(spo2_vals) >= self.minimum_samples_per_minute:
             mean = sum(spo2_vals) / len(spo2_vals)
-            samples.append(MinuteSample(
-                minute_start=minute,
-                metric_type="SpO2",
-                value=mean / 100.0,
-                unit_string="%"
-            ))
+            samples.append(MinuteSample(minute_start=minute, metric_type="SpO2", value=mean / 100.0, unit_string="%"))
         if len(pulse_vals) >= self.minimum_samples_per_minute:
             mean = sum(pulse_vals) / len(pulse_vals)
-            samples.append(MinuteSample(
-                minute_start=minute,
-                metric_type="PulseRate",
-                value=mean,
-                unit_string="count/min"
-            ))
+            samples.append(
+                MinuteSample(minute_start=minute, metric_type="PulseRate", value=mean, unit_string="count/min")
+            )
         return samples

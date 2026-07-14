@@ -44,7 +44,9 @@ pub fn command(payload: &[u8]) -> Vec<u8> {
 /// Attempt to parse an 8-byte raw frame. Returns Some(Reading) on
 /// success, None if any validation fails.
 pub fn parse_reading(raw: &[u8]) -> Option<Reading> {
-    if raw.len() != FRAME_LENGTH { return None; }
+    if raw.len() != FRAME_LENGTH {
+        return None;
+    }
     if raw[0] != FRAME_HEADER[0] || raw[1] != FRAME_HEADER[1] || raw[2] != FRAME_HEADER[2] {
         return None;
     }
@@ -52,18 +54,36 @@ pub fn parse_reading(raw: &[u8]) -> Option<Reading> {
         return None;
     }
     let cks = (raw[..7].iter().map(|&b| b as u16).sum::<u16>() & 0x7F) as u8;
-    if raw[7] != cks { return None; }
+    if raw[7] != cks {
+        return None;
+    }
 
     let raw_pr = raw[3];
     let raw_spo2 = raw[4];
 
     let is_sentinel = |b: u8| SENTINEL_VALUES.contains(&b);
 
-    let pulse = if is_sentinel(raw_pr) { None } else { Some(raw_pr) };
-    let spo2 = if is_sentinel(raw_spo2) { None } else { Some(raw_spo2) };
+    let pulse = if is_sentinel(raw_pr) {
+        None
+    } else {
+        Some(raw_pr)
+    };
+    let spo2 = if is_sentinel(raw_spo2) {
+        None
+    } else {
+        Some(raw_spo2)
+    };
 
-    if let Some(p) = pulse && !(PULSE_MIN_BPM..=PULSE_MAX_BPM).contains(&p) { return None; }
-    if let Some(s) = spo2 && s > SPO2_MAX_PCT { return None; }
+    if let Some(p) = pulse
+        && !(PULSE_MIN_BPM..=PULSE_MAX_BPM).contains(&p)
+    {
+        return None;
+    }
+    if let Some(s) = spo2
+        && s > SPO2_MAX_PCT
+    {
+        return None;
+    }
 
     Some(Reading::new(spo2, pulse))
 }

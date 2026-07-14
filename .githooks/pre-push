@@ -9,39 +9,55 @@ FAILED=()
 section() { echo "===> $*"; }
 
 # ---- Go ----
-section "Go: vet + test"
-(cd "$ROOT/go" && go vet ./... && go test ./... -count=1) || FAILED+=("go")
+section "Go: fmt + vet + test"
+(cd "$ROOT/go" && gofmt -l . | grep -q . && echo "FAIL: gofmt needed" && exit 1 || true
+    go vet ./... && go test ./... -count=1) || FAILED+=("go")
 
 # ---- Python ----
-section "Python: ruff + test"
-(cd "$ROOT/python" && ruff check src/ tests/ && PYTHONPATH=src python -m pytest tests/ -q) || FAILED+=("python")
+section "Python: format + lint + test"
+(cd "$ROOT/python" && ruff format --check src/ tests/ && ruff check src/ tests/ &&
+    PYTHONPATH=src python -m pytest tests/ -q) || FAILED+=("python")
 
 # ---- Node ----
-section "Node: tsc + test"
-(
-    NPM="${NPM:-npm}"
-    cd "$ROOT/node"
-    "$NPM" ci --silent
-    npx tsc --noEmit
-    node --import tsx --test tests/*.test.ts
-) || FAILED+=("node")
+section "Node: fmt + tsc + test"
+(cd "$ROOT/node" && npm ci --silent && npx prettier --check "src/**/*.ts" "tests/**/*.ts" &&
+    npx tsc --noEmit && node --import tsx --test tests/*.test.ts) || FAILED+=("node")
 
 # ---- Rust ----
-section "Rust: clippy -D warnings + test"
+section "Rust: fmt + clippy + test"
 (
-    # Find cargo in common locations (non-interactive shells may not have it on PATH)
     CARGO="${CARGO:-$HOME/.cargo/bin/cargo}"
-    if ! command -v "$CARGO" &>/dev/null; then
-        CARGO="$(command -v cargo 2>/dev/null || echo '')"
-    fi
+    [ -x "$CARGO" ] || CARGO="$(command -v cargo 2>/dev/null || true)"
     if [ -z "$CARGO" ]; then
         echo "SKIP: cargo not found (install rustup)"
     else
         cd "$ROOT/rust"
-        "$CARGO" clippy --features ble -- -D warnings
-        "$CARGO" test --features ble -q
+        "$CARGO" fmt --check && "$CARGO" clippy --features ble -- -D warnings &&
+            "$CARGO" test --features ble -q
     fi
 ) || FAILED+=("rust")
+
+# ---- Swift (macOS only) ----
+section "Swift: build + test"
+(
+    if command -v swift &>/dev/null; then
+        cd "$ROOT/swift"
+        swift build --configuration release 2>&1 | tail -1
+        # swiftpm-testing-helper crashes with SIGTRAP on exit (Xcode quirk).
+        # Exit code is unreliable; check output text. pipefail off for this line.
+        set +eo pipefail
+        swift test 2>/dev/null | grep -q 'Test Suite.*passed' && passed=1 || passed=0
+        set -eo pipefail
+        if [ "$passed" = "1" ]; then
+            echo "    ✓ All Swift tests passed"
+        else
+            echo "    ✘ Swift tests FAILED"
+            exit 1
+        fi
+    else
+        echo "SKIP: swift not found (macOS with Xcode required)"
+    fi
+) || FAILED+=("swift")
 
 # ---- Summary ----
 if [ ${#FAILED[@]} -eq 0 ]; then

@@ -488,7 +488,7 @@ extension EMAYClient: CBPeripheralDelegate {
         error: Error?
     ) {
         nonisolated(unsafe) let chUUID = characteristic.uuid
-        nonisolated(unsafe) let data = characteristic.value.flatMap { Data($0) }
+        let data = characteristic.value.flatMap { Data($0) }
         Task { @MainActor [weak self] in
             guard let self,
                   chUUID == CBUUID(string: EMAYProtocol.notifyUUID),
