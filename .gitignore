@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+*.py[cod]
+
+# Node.js
+node_modules/
+dist/
+*.js.map
+
+# Rust
+target/
+*.rs.bk
+
+# Go
+*.exe
+*.test
+
+# Kotlin
+.idea/
+.gradle/
+build/
+*.iml
+local.properties
+.gradletasknamecache
+
+# macOS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+*.swp
+*.swo
+*~
+
+# Secrets
+.env
+*.pem
+*.key
