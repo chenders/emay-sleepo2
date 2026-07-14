@@ -1,0 +1,47 @@
+{
+  "name": "emay-sleepo2",
+  "version": "1.0.0",
+  "description": "BLE client and CSV parser for the EMAY SleepO2 pulse oximeter",
+  "license": "MIT",
+  "author": "AnxietyWatch",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anxietywatch/emay-sleepo2.git"
+  },
+  "bugs": {
+    "url": "https://github.com/anxietywatch/emay-sleepo2/issues"
+  },
+  "homepage": "https://github.com/anxietywatch/emay-sleepo2#readme",
+  "keywords": [
+    "emay", "sleepo2", "pulse-oximeter", "spo2", "ble", "bluetooth",
+    "health", "medical", "oximetry", "wearable"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist/"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "@abandonware/noble": "^1.9"
+  },
+  "peerDependenciesMeta": {
+    "@abandonware/noble": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "tsx": "^4",
+    "typescript": "^5.7"
+  }
+}

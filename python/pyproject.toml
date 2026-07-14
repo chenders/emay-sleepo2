@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "emay-sleepo2"
+version = "1.0.0"
+description = "BLE client and CSV parser for the EMAY SleepO2 pulse oximeter"
+readme = { file = "../../README.md", content-type = "text/markdown" }
+license = { text = "MIT" }
+authors = [{ name = "AnxietyWatch" }]
+keywords = [
+    "emay", "sleepo2", "pulse-oximeter", "spo2", "ble", "bluetooth",
+    "health", "medical", "oximetry", "wearable"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+ble = ["bleak>=0.22"]
+csv = []
+dev = ["pytest", "ruff"]
+all = ["bleak>=0.22", "pytest", "ruff"]
+
+[project.urls]
+Homepage = "https://github.com/anxietywatch/emay-sleepo2"
+Repository = "https://github.com/anxietywatch/emay-sleepo2"
+Issues = "https://github.com/anxietywatch/emay-sleepo2/issues"
+Specification = "https://github.com/anxietywatch/emay-sleepo2/blob/main/spec.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

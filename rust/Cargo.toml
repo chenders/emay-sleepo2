@@ -1,0 +1,22 @@
+[package]
+name = "emay-sleepo2"
+version = "1.0.0"
+edition = "2024"
+description = "BLE client and CSV parser for the EMAY SleepO2 pulse oximeter"
+license = "MIT"
+repository = "https://github.com/anxietywatch/emay-sleepo2"
+keywords = ["emay", "sleepo2", "pulse-oximeter", "spo2", "ble", "bluetooth", "health"]
+categories = ["hardware-support", "science", "api-bindings"]
+
+[dependencies]
+btleplug = { version = "0.11", optional = true }
+tokio = { version = "1", features = ["full"], optional = true }
+uuid = { version = "1", optional = true }
+
+[features]
+default = []
+ble = ["btleplug", "tokio", "uuid"]
+csv = []
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
