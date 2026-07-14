@@ -77,7 +77,7 @@ package main
 import (
     "fmt"
     "time"
-    emay "github.com/anxietywatch/emay-sleepo2"
+    emay "github.com/chenders/emay-sleepo2"
 )
 
 func main() {

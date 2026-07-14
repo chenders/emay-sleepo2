@@ -6,12 +6,12 @@
   "author": "AnxietyWatch",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/anxietywatch/emay-sleepo2.git"
+    "url": "git+https://github.com/chenders/emay-sleepo2.git"
   },
   "bugs": {
-    "url": "https://github.com/anxietywatch/emay-sleepo2/issues"
+    "url": "https://github.com/chenders/emay-sleepo2/issues"
   },
-  "homepage": "https://github.com/anxietywatch/emay-sleepo2#readme",
+  "homepage": "https://github.com/chenders/emay-sleepo2#readme",
   "keywords": [
     "emay", "sleepo2", "pulse-oximeter", "spo2", "ble", "bluetooth",
     "health", "medical", "oximetry", "wearable"

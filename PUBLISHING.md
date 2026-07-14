@@ -52,7 +52,7 @@ This is the easiest. No token to generate or store.
 3. Go to <https://pypi.org/manage/account/publishing/>.
 4. Under **"Add a new pending publisher"**, fill in:
    - **Owner**: your PyPI username
-   - **Repository**: `anxietywatch/emay-sleepo2`
+   - **Repository**: `chenders/emay-sleepo2`
    - **Workflow name**: `publish.yml`
    - **Environment name**: *(leave blank — uses repo-default)*
 5. Click **Add**.
@@ -103,7 +103,7 @@ Swift Package Manager doesn't have a central registry. A version tag
 (`v1.0.0`) pushed to GitHub IS the publish action. Consumers add it via:
 
 ```swift
-.package(url: "https://github.com/anxietywatch/emay-sleepo2", from: "1.0.0")
+.package(url: "https://github.com/chenders/emay-sleepo2", from: "1.0.0")
 ```
 
 No account, no token, no CI job. Just tag correctly.
@@ -115,7 +115,7 @@ repos automatically. Pushing a `v1.0.0` tag is all that's needed.
 Consumers import:
 
 ```go
-import "github.com/anxietywatch/emay-sleepo2"
+import "github.com/chenders/emay-sleepo2"
 ```
 
 And Go's toolchain resolves the tagged version automatically.
@@ -131,8 +131,8 @@ namespace, a Sonatype account, and GPG signing.
 2. Create a **New Project** ticket under the **Community Support — Open
    Source Project Repository Hosting (OSSRH)** project.
    - **Group Id**: `com.anxietywatch` (or `io.github.yourusername`)
-   - **Project URL**: `https://github.com/anxietywatch/emay-sleepo2`
-   - **SCM url**: `https://github.com/anxietywatch/emay-sleepo2.git`
+   - **Project URL**: `https://github.com/chenders/emay-sleepo2`
+   - **SCM url**: `https://github.com/chenders/emay-sleepo2.git`
 3. A human at Sonatype approves it (typically within 1 business day).
    You need to prove you control the `com.anxietywatch` domain (a TXT
    record or a temporary GitHub repo works).
@@ -254,5 +254,5 @@ cargo publish --dry-run
 ```bash
 cd kotlin
 ./gradlew publishToMavenLocal
-# Check ~/.m2/repository/com/anxietywatch/emay-sleepo2/
+# Check ~/.m2/repository/com/chenders/emay-sleepo2/
 ```
