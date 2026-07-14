@@ -185,7 +185,7 @@ impl EMAYClient {
         let _latest = self.latest_reading.clone();
         let _stale = self.stale_timeout;
         let interval = self.heartbeat_interval;
-        let downsampler = Arc::new(Mutex::new(LiveDownsampler::new()));
+        let _downsampler = Arc::new(Mutex::new(LiveDownsampler::new()));
 
         tokio::spawn(async move {
             loop {
