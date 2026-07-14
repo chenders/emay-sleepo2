@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="banner.svg" alt="EMAY SleepO2 BLE SDK: the phone can't decode the oximeter's Bluetooth protocol until spec.md decodes it, then the 8-byte frame streams across and the SpO2 and pulse readings go live" width="100%">
+</p>
+
 # EMAY SleepO2 BLE SDK
 
 > A multi-language SDK for the EMAY SleepO2 pulse oximeter's real-time
