@@ -39,7 +39,9 @@ below) — the library declares none itself, so request them in your app.
 ```kotlin
 val emay = EMAYClient(context)
 emay.onReading = { reading ->
-    println("SpO₂: ${reading.spo2}%  HR: ${reading.pulse}")
+    val spo2 = reading.spo2?.let { "$it%" } ?: "—"
+    val pulse = reading.pulse?.toString() ?: "—"
+    println("SpO₂: $spo2  HR: $pulse")
 }
 emay.start(scope = lifecycleScope)
 

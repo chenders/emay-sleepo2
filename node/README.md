@@ -31,7 +31,9 @@ import { EMAYClient } from "@groundeffect/emay-sleepo2";
 
 const emay = new EMAYClient();
 emay.on("reading", (r) => {
-  console.log(`SpO₂: ${r.spo2}%  HR: ${r.pulse}`);
+  const spo2 = r.spo2 == null ? "—" : `${r.spo2}%`;
+  const pulse = r.pulse ?? "—";
+  console.log(`SpO₂: ${spo2}  HR: ${pulse}`);
 });
 await emay.start();
 

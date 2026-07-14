@@ -23,13 +23,22 @@ Raspberry Pi.
 
 ## Quick Start
 
+Live streaming requires the `ble` extra — with a plain
+`pip install emay-sleepo2`, `emay_sleepo2.EMAYClient` is `None` because
+bleak isn't installed.
+
 ```python
 import asyncio
 from emay_sleepo2 import EMAYClient
 
+def show(reading):
+    spo2 = f"{reading.spo2}%" if reading.spo2 is not None else "—"
+    pulse = reading.pulse if reading.pulse is not None else "—"
+    print(f"SpO₂: {spo2}  HR: {pulse}")
+
 async def main():
     emay = EMAYClient()
-    emay.on_reading = lambda r: print(f"SpO₂: {r.spo2}%  HR: {r.pulse}")
+    emay.on_reading = show
     await emay.start()
     await asyncio.sleep(30)  # stream for 30 seconds
     await emay.stop()

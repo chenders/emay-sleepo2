@@ -35,7 +35,9 @@ use emay_sleepo2::EMAYClient;
 async fn main() -> Result<(), String> {
     let mut emay = EMAYClient::new().await?;
     emay.set_on_reading(Arc::new(|r| {
-        println!("SpO₂: {:?}  HR: {:?}", r.spo2, r.pulse);
+        let spo2 = r.spo2.map_or("—".to_string(), |v| format!("{v}%"));
+        let pulse = r.pulse.map_or("—".to_string(), |v| v.to_string());
+        println!("SpO₂: {spo2}  HR: {pulse}");
     }));
     emay.start().await?;
     tokio::time::sleep(Duration::from_secs(30)).await;
@@ -59,7 +61,8 @@ sensor couldn't acquire that measurement (finger off), **not** zero.
 
 ## CSV Parsing (no BLE required)
 
-The EMAY app exports session CSVs. The parser has no BLE dependencies:
+The EMAY app exports session CSVs. Parsing needs no BLE hardware or
+connection:
 
 ```rust
 use emay_sleepo2::parse_csv_file;
@@ -68,9 +71,10 @@ let (readings, warnings) = parse_csv_file("session.csv", true)?;
 ```
 
 `parse_csv(content, correct_dst_fold)` accepts raw CSV text; both return
-`(Vec<Reading>, Vec<String>)` where malformed rows become warnings, not
-errors. DST fold correction disambiguates timestamps recorded during the
-repeated fall-back hour.
+`Result<(Vec<Reading>, Vec<String>), String>`. Malformed rows become
+warnings rather than errors — `Err` is reserved for unreadable files and
+CSVs with no data rows. DST fold correction disambiguates timestamps
+recorded during the repeated fall-back hour.
 
 ## Protocol Layer
 

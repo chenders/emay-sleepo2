@@ -51,9 +51,13 @@ func main() {
             fmt.Printf("SpO₂: %d%%  HR: %d\n", *r.SpO2, *r.Pulse)
         }
     }
-    client.Start("") // empty address = scan for the device
+    if err := client.Start(""); err != nil { // empty address = scan for the device
+        panic(err)
+    }
     time.Sleep(30 * time.Second)
-    client.Stop()
+    if err := client.Stop(); err != nil {
+        panic(err)
+    }
 }
 ```
 

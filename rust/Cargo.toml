@@ -6,7 +6,7 @@ description = "BLE client and CSV parser for the EMAY SleepO2 pulse oximeter"
 readme = "README.md"
 license = "MIT"
 repository = "https://github.com/chenders/emay-sleepo2"
-keywords = ["emay", "sleepo2", "pulse-oximeter", "spo2", "ble", "bluetooth", "health"]
+keywords = ["emay", "sleepo2", "pulse-oximeter", "spo2", "ble"]
 categories = ["hardware-support", "science", "api-bindings"]
 
 [dependencies]
