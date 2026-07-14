@@ -65,6 +65,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - name: Install system deps
+        run: sudo apt-get update && sudo apt-get install -y libdbus-1-dev pkg-config
       - name: Build
         run: cargo build --features ble
       - name: Lint (clippy)
