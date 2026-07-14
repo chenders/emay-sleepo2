@@ -41,7 +41,7 @@ asyncio.run(main())
 ### Node.js
 
 ```js
-import { EMAYClient } from 'emay-sleepo2';
+import { EMAYClient } from '@groundeffect/emay-sleepo2';
 
 const emay = new EMAYClient();
 emay.on('reading', (r) => {
