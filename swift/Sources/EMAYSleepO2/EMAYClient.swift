@@ -231,7 +231,7 @@ public final class EMAYClient: NSObject, @unchecked Sendable {
         heartbeatTask?.cancel()
         heartbeatTask = Task { @MainActor [weak self] in
             while !Task.isCancelled {
-                try? await Task.sleep(for: .milliseconds(Int(heartbeatInterval * 1000)))
+                try? await Task.sleep(for: .milliseconds(Int((self?.heartbeatInterval ?? 1.5) * 1000)))
                 guard let self, self.status == .streaming else { return }
                 self.write(EMAYProtocol.heartbeat)
                 // Staleness watchdog
