@@ -57,7 +57,8 @@ surface:
 - `emay.start(address:)` — connect to a specific peripheral by `UUID`
   instead of scanning.
 - `emay.onStatusChange` — observe the `EMAYStatus` state machine
-  (`.idle`, `.scanning`, `.connecting`, `.streaming`, `.failed`, …).
+  (`.idle`, `.scanning`, `.connecting`, `.streaming`, `.failed(message)`,
+  …).
 - `emay.onMinuteSamples` — receive finalized per-minute mean samples from
   the built-in `EMAYLiveDownsampler`.
 - `emay.isStreaming` / `emay.latestReading` — current state and last

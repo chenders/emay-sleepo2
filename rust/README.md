@@ -51,7 +51,7 @@ sequence, and keeps the stream alive with a heartbeat command. Useful
 surface:
 
 - `set_on_status(...)` — observe the `Status` state machine
-  (`Idle`, `Scanning`, `Connecting`, `Streaming`, `Failed`, …).
+  (`Idle`, `Scanning`, `Connecting`, `Streaming`, `Failed(String)`, …).
 - `set_on_minute_samples(...)` — receive finalized per-minute mean
   `MinuteSample` values from the built-in `LiveDownsampler`.
 - `status().await` — current state.
