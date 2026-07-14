@@ -51,13 +51,11 @@ func TestParseReadingBothSentinels(t *testing.T) {
 }
 
 func TestParseReadingPulseTooLow(t *testing.T) {
-	r := parseReading(frame(29, 98))
-	if r == nil || r.Pulse != nil { t.Error("pulse 29 should be nil") }
+	if r := parseReading(frame(29, 98)); r != nil { t.Error("expected nil") }
 }
 
 func TestParseReadingPulseTooHigh(t *testing.T) {
-	r := parseReading(frame(221, 98))
-	if r == nil || r.Pulse != nil { t.Error("pulse 221 should be nil") }
+	if r := parseReading(frame(221, 98)); r != nil { t.Error("expected nil") }
 }
 
 func TestParseReadingPulseBoundary(t *testing.T) {
@@ -68,8 +66,7 @@ func TestParseReadingPulseBoundary(t *testing.T) {
 }
 
 func TestParseReadingSpO2TooHigh(t *testing.T) {
-	r := parseReading(frame(62, 101))
-	if r == nil || r.SpO2 != nil { t.Error("spo2 101 should be nil") }
+	if r := parseReading(frame(62, 101)); r != nil { t.Error("expected nil") }
 }
 
 func TestParseReadingSpO2Boundary(t *testing.T) {

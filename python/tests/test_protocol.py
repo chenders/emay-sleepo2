@@ -28,9 +28,9 @@ class TestChecksum:
 
 class TestParseReading:
     def test_valid(self):
-        spo2, pr = parse_reading(_frame(62, 98))
-        assert pr == 62
-        assert spo2 == 98
+        r = parse_reading(_frame(62, 98))
+        assert r.pulse == 62
+        assert r.spo2 == 98
 
     def test_wrong_length(self):
         assert parse_reading(b'\xEB\x01\x05\x3E\x62\x7F') is None
@@ -49,27 +49,27 @@ class TestParseReading:
         assert parse_reading(bytes([0xEB, 0x01, 0x05, 62, 98, 0x7F, 0x00, 0xFF])) is None
 
     def test_sentinel_pr_0(self):
-        spo2, pr = parse_reading(_frame(0x00, 98))
-        assert pr is None
-        assert spo2 == 98
+        r = parse_reading(_frame(0x00, 98))
+        assert r.pulse is None
+        assert r.spo2 == 98
 
     def test_sentinel_pr_ff(self):
-        spo2, pr = parse_reading(_frame(0xFF, 98))
-        assert pr is None
+        r = parse_reading(_frame(0xFF, 98))
+        assert r.pulse is None
 
     def test_sentinel_spo2_0(self):
-        spo2, pr = parse_reading(_frame(62, 0x00))
-        assert spo2 is None
-        assert pr == 62
+        r = parse_reading(_frame(62, 0x00))
+        assert r.spo2 is None
+        assert r.pulse == 62
 
     def test_sentinel_spo2_ff(self):
-        spo2, pr = parse_reading(_frame(62, 0xFF))
-        assert spo2 is None
+        r = parse_reading(_frame(62, 0xFF))
+        assert r.spo2 is None
 
     def test_both_sentinels(self):
-        spo2, pr = parse_reading(_frame(0xFF, 0xFF))
-        assert spo2 is None
-        assert pr is None
+        r = parse_reading(_frame(0xFF, 0xFF))
+        assert r.spo2 is None
+        assert r.pulse is None
 
     def test_pulse_too_low(self):
         assert parse_reading(_frame(29, 98)) is None
@@ -78,20 +78,20 @@ class TestParseReading:
         assert parse_reading(_frame(221, 98)) is None
 
     def test_pulse_boundary_min(self):
-        _, pr = parse_reading(_frame(30, 98))
-        assert pr == 30
+        r = parse_reading(_frame(30, 98))
+        assert r.pulse == 30
 
     def test_pulse_boundary_max(self):
-        _, pr = parse_reading(_frame(220, 98))
-        assert pr == 220
+        r = parse_reading(_frame(220, 98))
+        assert r.pulse == 220
 
     def test_spo2_too_high(self):
         assert parse_reading(_frame(62, 101)) is None
 
     def test_spo2_boundary_min(self):
-        spo2, _ = parse_reading(_frame(62, 1))
-        assert spo2 == 1
+        r = parse_reading(_frame(62, 1))
+        assert r.spo2 == 1
 
     def test_spo2_boundary_max(self):
-        spo2, _ = parse_reading(_frame(62, 100))
-        assert spo2 == 100
+        r = parse_reading(_frame(62, 100))
+        assert r.spo2 == 100

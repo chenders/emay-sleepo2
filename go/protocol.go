@@ -5,9 +5,9 @@ import "time"
 // ---- Protocol constants ----
 
 const (
-	serviceUUID = "ff12"
-	writeUUID   = "ff01"
-	notifyUUID  = "ff02"
+	serviceUUID = "0000ff12-0000-1000-8000-00805f9b34fb"
+	writeUUID   = "0000ff01-0000-1000-8000-00805f9b34fb"
+	notifyUUID  = "0000ff02-0000-1000-8000-00805f9b34fb"
 	namePrefix  = "SleepO2"
 )
 
@@ -46,10 +46,12 @@ func parseReading(raw []byte) *Reading {
 	rawSpO2 := int(raw[4])
 
 	var pulse, spo2 *int
-	if rawPR != 0 && rawPR != 0xFF && rawPR >= 30 && rawPR <= 220 {
+	if rawPR != 0 && rawPR != 0xFF {
+		if rawPR < 30 || rawPR > 220 { return nil }
 		v := rawPR; pulse = &v
 	}
-	if rawSpO2 != 0 && rawSpO2 != 0xFF && rawSpO2 <= 100 {
+	if rawSpO2 != 0 && rawSpO2 != 0xFF {
+		if rawSpO2 > 100 { return nil }
 		v := rawSpO2; spo2 = &v
 	}
 

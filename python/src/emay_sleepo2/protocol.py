@@ -7,7 +7,10 @@ byte-manipulation idioms.
 
 from __future__ import annotations
 
-from typing import List, Optional, Tuple
+from datetime import datetime, timezone
+from typing import List, Optional
+
+from .types import Reading
 
 # ---- BLE identifiers ----
 SERVICE_UUID = "0000ff12-0000-1000-8000-00805f9b34fb"
@@ -54,10 +57,10 @@ def command(payload: bytes) -> bytes:
     return payload + bytes([checksum(payload)])
 
 
-def parse_reading(raw: bytes) -> Optional[Tuple[Optional[int], Optional[int]]]:
+def parse_reading(raw: bytes) -> Optional[Reading]:
     """Attempt to parse an 8-byte raw frame from the BLE notify characteristic.
 
-    Returns (spo2, pulse) as a tuple on success, or None if the frame
+    Returns a Reading on success, or None if the frame
     fails any validation check. Both spo2 and pulse can individually be
     None when the sensor reports "no finger detected" for that metric.
     """
@@ -84,4 +87,4 @@ def parse_reading(raw: bytes) -> Optional[Tuple[Optional[int], Optional[int]]]:
     if spo2 is not None and (spo2 < SPO2_MIN_PERCENT or spo2 > SPO2_MAX_PERCENT):
         return None
 
-    return (spo2, pr)
+    return Reading(spo2=spo2, pulse=pr, timestamp=datetime.now(timezone.utc))
