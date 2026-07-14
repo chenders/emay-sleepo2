@@ -6,9 +6,9 @@
 import { Reading } from "./types.js";
 
 // ---- BLE identifiers ----
-export const SERVICE_UUID = "ff12";
-export const WRITE_UUID = "ff01";
-export const NOTIFY_UUID = "ff02";
+export const SERVICE_UUID = "0000ff12-0000-1000-8000-00805f9b34fb";
+export const WRITE_UUID = "0000ff01-0000-1000-8000-00805f9b34fb";
+export const NOTIFY_UUID = "0000ff02-0000-1000-8000-00805f9b34fb";
 export const NAME_PREFIX = "SleepO2";
 
 // ---- Commands ----

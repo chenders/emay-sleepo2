@@ -182,11 +182,9 @@ class EMAYClient:
         self._start_heartbeat()
 
     def _on_data(self, char: BleakGATTCharacteristic, data: bytearray) -> None:
-        result = parse_reading(bytes(data))
-        if result is None:
+        reading = parse_reading(bytes(data))
+        if reading is None:
             return
-        spo2, pulse = result
-        reading = Reading(spo2=spo2, pulse=pulse)
         self._latest_reading = reading
         self._last_reading_at = datetime.now(timezone.utc)
         if self.on_reading:

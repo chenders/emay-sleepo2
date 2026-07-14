@@ -62,11 +62,11 @@ public enum EMAYStatus: Equatable, Sendable {
 /// byte-manipulation idioms.
 public enum EMAYProtocol {
     /// BLE primary service UUID (vendor-specific FF12).
-    public static let serviceUUID = "FF12"
+    public static let serviceUUID = "0000FF12-0000-1000-8000-00805F9B34FB"
     /// Write-characteristic UUID (commands go here).
-    public static let writeUUID = "FF01"
+    public static let writeUUID = "0000FF01-0000-1000-8000-00805F9B34FB"
     /// Notify-characteristic UUID (data frames arrive here).
-    public static let notifyUUID = "FF02"
+    public static let notifyUUID = "0000FF02-0000-1000-8000-00805F9B34FB"
 
     /// Advertised local-name prefix for the SleepO2.
     public static let namePrefix = "SleepO2"
