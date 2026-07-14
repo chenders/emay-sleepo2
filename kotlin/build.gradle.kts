@@ -63,7 +63,7 @@ publishing {
                 }
                 developers {
                     developer {
-                        name.set("AnxietyWatch")
+                        name.set("Ground Effect Software, LLC")
                     }
                 }
                 scm {
