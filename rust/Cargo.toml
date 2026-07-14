@@ -12,11 +12,13 @@ categories = ["hardware-support", "science", "api-bindings"]
 btleplug = { version = "0.11", optional = true }
 tokio = { version = "1", features = ["full"], optional = true }
 uuid = { version = "1", optional = true }
+futures = { version = "0.3", optional = true }
 
 [features]
 default = []
-ble = ["btleplug", "tokio", "uuid"]
+ble = ["btleplug", "tokio", "uuid", "futures"]
 csv = []
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
+futures = "0.3"

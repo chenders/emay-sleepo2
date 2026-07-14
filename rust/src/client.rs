@@ -4,6 +4,7 @@ use std::time::Duration;
 
 use btleplug::api::{Central, Manager as _, Peripheral as _, ScanFilter, WriteType};
 use btleplug::platform::{Adapter, Manager, Peripheral};
+use futures::StreamExt;
 use tokio::sync::Mutex;
 use tokio::time;
 use uuid::Uuid;
@@ -145,22 +146,27 @@ impl EMAYClient {
         let downsampler = Arc::new(Mutex::new(LiveDownsampler::new()));
 
         {
-            let peripheral = peripheral.clone();
             let downsampler = downsampler.clone();
-            peripheral.on_notification(Box::new(move |_uuid, data| {
-                if let Some(reading) = parse_reading(data) {
-                    if let Some(cb) = reading_cb.blocking_lock().as_ref() {
-                        cb(reading.clone());
-                    }
-                    let mut ds = downsampler.blocking_lock();
-                    let minutes = ds.add(&reading);
-                    if !minutes.is_empty() {
-                        if let Some(cb) = minute_cb.blocking_lock().as_ref() {
-                            cb(minutes);
+            let mut notifications = peripheral
+                .notifications()
+                .await
+                .map_err(|e| format!("notifications: {}", e))?;
+            tokio::spawn(async move {
+                while let Some(notification) = notifications.next().await {
+                    if let Some(reading) = parse_reading(&notification.value) {
+                        if let Some(cb) = reading_cb.blocking_lock().as_ref() {
+                            cb(reading.clone());
+                        }
+                        let mut ds = downsampler.blocking_lock();
+                        let minutes = ds.add(&reading);
+                        if !minutes.is_empty() {
+                            if let Some(cb) = minute_cb.blocking_lock().as_ref() {
+                                cb(minutes);
+                            }
                         }
                     }
                 }
-            }));
+            });
         }
 
         // Serialized start sequence
