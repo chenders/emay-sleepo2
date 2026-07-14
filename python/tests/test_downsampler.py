@@ -1,5 +1,5 @@
 """Tests for EMAY downsampler."""
-from datetime import datetime, timedelta
+from datetime import datetime
 from emay_sleepo2.downsampler import LiveDownsampler
 from emay_sleepo2.types import Reading
 

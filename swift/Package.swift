@@ -20,7 +20,7 @@ let package = Package(
         ),
         .target(
             name: "EMAYSleepO2CSV",
-            dependencies: [],
+            dependencies: ["EMAYSleepO2"],
             path: "Sources/EMAYSleepO2CSV"
         ),
         .testTarget(
