@@ -127,6 +127,6 @@ fn parse_date_to_secs(s: &str) -> Option<f64> {
     // Adjust for local offset: approximate
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
     let now_utc = now.as_secs() as f64;
-    let local_now = now_utc; // UTC for simplicity
+    let _local_now = now_utc; // UTC for simplicity
     Some(total_secs)
 }

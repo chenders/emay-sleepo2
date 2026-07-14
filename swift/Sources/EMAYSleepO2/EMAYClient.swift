@@ -263,31 +263,33 @@ public final class EMAYClient: NSObject, @unchecked Sendable {
 // MARK: - CBCentralManagerDelegate
 
 extension EMAYClient: CBCentralManagerDelegate {
-    public func centralManager(
+    public nonisolated func centralManager(
         _ central: CBCentralManager,
         willRestoreState dict: [String: Any]
     ) {
         let restored = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral] ?? []
-        guard !restored.isEmpty else { return }
+        guard let firstPeripheral = restored.first else { return }
+        let identifier = firstPeripheral.identifier  // UUID is Sendable
         Task { @MainActor [weak self] in
             guard let self, self.peripheral == nil else { return }
-            let peripheral = restored[0]
-            peripheral.delegate = self
-            self.peripheral = peripheral
+            guard let p = self.central.retrievePeripherals(withIdentifiers: [identifier]).first else { return }
+            p.delegate = self
+            self.peripheral = p
             self.wantScan = true
             self.status = .scanning
         }
     }
 
-    public func centralManagerDidUpdateState(_ central: CBCentralManager) {
+    public nonisolated func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        let state = central.state  // CBManagerState is Sendable
         Task { @MainActor [weak self] in
             guard let self else { return }
-            switch central.state {
+            switch state {
             case .poweredOn:
                 if self.wantScan {
                     self.beginMonitoring()
                 } else if let orphan = self.peripheral {
-                    central.cancelPeripheralConnection(orphan)
+                    self.central.cancelPeripheralConnection(orphan)
                     self.resetConnectionState()
                 }
             case .poweredOff:
@@ -307,46 +309,51 @@ extension EMAYClient: CBCentralManagerDelegate {
         }
     }
 
-    public func centralManager(
+    public nonisolated func centralManager(
         _ central: CBCentralManager,
         didDiscover peripheral: CBPeripheral,
         advertisementData: [String: Any],
         rssi RSSI: NSNumber
     ) {
+        let name = (advertisementData[CBAdvertisementDataLocalNameKey] as? String)
+            ?? peripheral.name
+            ?? ""
+        let identifier = peripheral.identifier
         Task { @MainActor [weak self] in
             guard let self, self.peripheral == nil else { return }
-            let name = (advertisementData[CBAdvertisementDataLocalNameKey] as? String)
-                ?? peripheral.name
-                ?? ""
             guard name.isEmpty || name.hasPrefix(EMAYProtocol.namePrefix) else { return }
-            central.stopScan()
-            self.peripheral = peripheral
-            peripheral.delegate = self
+            guard let p = self.central.retrievePeripherals(withIdentifiers: [identifier]).first else { return }
+            self.central.stopScan()
+            self.peripheral = p
+            p.delegate = self
             self.status = .connecting
-            central.connect(peripheral)
-            self.knownPeripheralUUID = peripheral.identifier
+            self.central.connect(p)
+            self.knownPeripheralUUID = identifier
         }
     }
 
-    public func centralManager(
+    public nonisolated func centralManager(
         _ central: CBCentralManager,
         didConnect peripheral: CBPeripheral
     ) {
+        let identifier = peripheral.identifier
         Task { @MainActor [weak self] in
-            guard let self, peripheral.identifier == self.peripheral?.identifier else { return }
+            guard let self, identifier == self.peripheral?.identifier else { return }
             if self.status == .scanning { self.status = .connecting }
-            peripheral.discoverServices([CBUUID(string: EMAYProtocol.serviceUUID)])
+            guard let p = self.peripheral else { return }
+            p.discoverServices([CBUUID(string: EMAYProtocol.serviceUUID)])
         }
     }
 
-    public func centralManager(
+    public nonisolated func centralManager(
         _ central: CBCentralManager,
         didFailToConnect peripheral: CBPeripheral,
         error: Error?
     ) {
+        let message = error?.localizedDescription ?? "unknown"
         Task { @MainActor [weak self] in
             guard let self else { return }
-            let msg = "connect failed: \(error?.localizedDescription ?? "unknown")"
+            let msg = "connect failed: \(message)"
             self.resetConnectionState()
             if self.wantScan && self.autoReconnect {
                 self.beginMonitoring()
@@ -356,7 +363,7 @@ extension EMAYClient: CBCentralManagerDelegate {
         }
     }
 
-    public func centralManager(
+    public nonisolated func centralManager(
         _ central: CBCentralManager,
         didDisconnectPeripheral peripheral: CBPeripheral,
         error: Error?
@@ -378,19 +385,22 @@ extension EMAYClient: CBCentralManagerDelegate {
 // MARK: - CBPeripheralDelegate
 
 extension EMAYClient: CBPeripheralDelegate {
-    public func peripheral(
+    public nonisolated func peripheral(
         _ peripheral: CBPeripheral,
         didDiscoverServices error: Error?
     ) {
+        let identifier = peripheral.identifier
+        let errMsg = error?.localizedDescription
         Task { @MainActor [weak self] in
-            guard let self, peripheral.identifier == self.peripheral?.identifier else { return }
-            if let error { self.fail("service discovery failed: \(error.localizedDescription)"); return }
-            guard let svc = peripheral.services?.first(where: {
+            guard let self, identifier == self.peripheral?.identifier else { return }
+            if let errMsg { self.fail("service discovery failed: \(errMsg)"); return }
+            guard let p = self.peripheral else { return }
+            guard let svc = p.services?.first(where: {
                 $0.uuid == CBUUID(string: EMAYProtocol.serviceUUID)
             }) else {
                 self.fail("EMAY service \(EMAYProtocol.serviceUUID) not found"); return
             }
-            peripheral.discoverCharacteristics(
+            p.discoverCharacteristics(
                 [
                     CBUUID(string: EMAYProtocol.writeUUID),
                     CBUUID(string: EMAYProtocol.notifyUUID)
@@ -400,40 +410,47 @@ extension EMAYClient: CBPeripheralDelegate {
         }
     }
 
-    public func peripheral(
+    public nonisolated func peripheral(
         _ peripheral: CBPeripheral,
         didDiscoverCharacteristicsFor service: CBService,
         error: Error?
     ) {
+        let identifier = peripheral.identifier
+        let errMsg = error?.localizedDescription
+        let writeUUID = CBUUID(string: EMAYProtocol.writeUUID)
+        let notifyUUID = CBUUID(string: EMAYProtocol.notifyUUID)
         Task { @MainActor [weak self] in
-            guard let self, peripheral.identifier == self.peripheral?.identifier else { return }
-            if let error {
-                self.fail("characteristic discovery failed: \(error.localizedDescription)")
+            guard let self, identifier == self.peripheral?.identifier else { return }
+            if let errMsg {
+                self.fail("characteristic discovery failed: \(errMsg)")
                 return
             }
-            for ch in service.characteristics ?? [] {
-                if ch.uuid == CBUUID(string: EMAYProtocol.writeUUID) { self.writeChar = ch }
-                if ch.uuid == CBUUID(string: EMAYProtocol.notifyUUID) { self.notifyChar = ch }
+            for ch in (self.peripheral?.services?.first?.characteristics) ?? [] {
+                if ch.uuid == writeUUID { self.writeChar = ch }
+                if ch.uuid == notifyUUID { self.notifyChar = ch }
             }
             guard let notifyChar = self.notifyChar, self.writeChar != nil else {
                 self.fail("EMAY characteristics not found"); return
             }
-            peripheral.setNotifyValue(true, for: notifyChar)
+            self.peripheral?.setNotifyValue(true, for: notifyChar)
         }
     }
 
-    public func peripheral(
+    public nonisolated func peripheral(
         _ peripheral: CBPeripheral,
         didUpdateNotificationStateFor characteristic: CBCharacteristic,
         error: Error?
     ) {
+        let chUUID = characteristic.uuid
+        let isNotifying = characteristic.isNotifying
+        let errMsg = error?.localizedDescription
         Task { @MainActor [weak self] in
-            guard let self, characteristic.uuid == CBUUID(string: EMAYProtocol.notifyUUID) else { return }
-            if let error {
-                self.fail("enabling notifications failed: \(error.localizedDescription)")
+            guard let self, chUUID == CBUUID(string: EMAYProtocol.notifyUUID) else { return }
+            if let errMsg {
+                self.fail("enabling notifications failed: \(errMsg)")
                 return
             }
-            guard characteristic.isNotifying else {
+            guard isNotifying else {
                 self.fail("notifications not enabled"); return
             }
             self.pendingWrites = EMAYProtocol.startSequence
@@ -441,18 +458,19 @@ extension EMAYClient: CBPeripheralDelegate {
         }
     }
 
-    public func peripheral(
+    public nonisolated func peripheral(
         _ peripheral: CBPeripheral,
         didWriteValueFor characteristic: CBCharacteristic,
         error: Error?
     ) {
+        let errMsg = error?.localizedDescription
         Task { @MainActor [weak self] in
             guard let self else { return }
             let completed = self.inFlightWrite
             self.inFlightWrite = nil
-            if let error {
+            if let errMsg {
                 if self.status != .streaming {
-                    self.fail("start-sequence write failed: \(error.localizedDescription)")
+                    self.fail("start-sequence write failed: \(errMsg)")
                 }
                 return
             }
@@ -464,16 +482,18 @@ extension EMAYClient: CBPeripheralDelegate {
         }
     }
 
-    public func peripheral(
+    public nonisolated func peripheral(
         _ peripheral: CBPeripheral,
         didUpdateValueFor characteristic: CBCharacteristic,
         error: Error?
     ) {
+        let chUUID = characteristic.uuid
+        let data = characteristic.value.flatMap { Data($0) }
         Task { @MainActor [weak self] in
             guard let self,
-                  characteristic.uuid == CBUUID(string: EMAYProtocol.notifyUUID),
+                  chUUID == CBUUID(string: EMAYProtocol.notifyUUID),
                   self.status == .streaming,
-                  let data = characteristic.value else { return }
+                  let data else { return }
             let raw = [UInt8](data)
             guard let reading = EMAYProtocol.parseReading(raw) else { return }
             self.latestReading = reading
