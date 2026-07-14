@@ -3,12 +3,15 @@
  */
 
 import { EventEmitter } from "events";
+import { Reading, MinuteSample, Status } from "./types.js";
 import {
-  Reading, MinuteSample, Status
-} from "./types.js";
-import {
-  SERVICE_UUID, WRITE_UUID, NOTIFY_UUID, NAME_PREFIX,
-  HEARTBEAT, START_SEQUENCE, STOP_REALTIME,
+  SERVICE_UUID,
+  WRITE_UUID,
+  NOTIFY_UUID,
+  NAME_PREFIX,
+  HEARTBEAT,
+  START_SEQUENCE,
+  STOP_REALTIME,
   parseReading,
 } from "./protocol.js";
 import { LiveDownsampler } from "./downsampler.js";
@@ -84,12 +87,22 @@ class NobleAdapter implements BLEAdapter {
 
 class NoblePeripheral implements BLEPeripheral {
   constructor(private p: any) {}
-  get id(): string { return this.p.id; }
-  get address(): string { return this.p.address; }
-  get advertisement() { return this.p.advertisement; }
+  get id(): string {
+    return this.p.id;
+  }
+  get address(): string {
+    return this.p.address;
+  }
+  get advertisement() {
+    return this.p.advertisement;
+  }
 
-  async connect(): Promise<void> { await this.p.connectAsync(); }
-  async disconnect(): Promise<void> { await this.p.disconnectAsync(); }
+  async connect(): Promise<void> {
+    await this.p.connectAsync();
+  }
+  async disconnect(): Promise<void> {
+    await this.p.disconnectAsync();
+  }
 
   async discoverServices(): Promise<BLEService[]> {
     const services = await this.p.discoverServicesAsync();
@@ -103,9 +116,13 @@ class NoblePeripheral implements BLEPeripheral {
 
 class NobleService implements BLEService {
   constructor(private s: any) {}
-  get uuid(): string { return this.s.uuid; }
+  get uuid(): string {
+    return this.s.uuid;
+  }
   get characteristics(): BLECharacteristic[] {
-    return (this.s.characteristics || []).map((c: any) => new NobleCharacteristic(c));
+    return (this.s.characteristics || []).map(
+      (c: any) => new NobleCharacteristic(c),
+    );
   }
 
   async discoverCharacteristics(): Promise<BLECharacteristic[]> {
@@ -116,7 +133,9 @@ class NobleService implements BLEService {
 
 class NobleCharacteristic implements BLECharacteristic {
   constructor(private c: any) {}
-  get uuid(): string { return this.c.uuid; }
+  get uuid(): string {
+    return this.c.uuid;
+  }
   async write(data: Buffer, withoutResponse?: boolean): Promise<void> {
     await this.c.writeAsync(data, withoutResponse ?? false);
   }
@@ -153,7 +172,9 @@ export class EMAYClient extends EventEmitter {
     this.adapter = adapter || new NobleAdapter();
   }
 
-  get status(): Status { return this._status; }
+  get status(): Status {
+    return this._status;
+  }
   set status(s: Status) {
     if (this._status !== s) {
       this._status = s;
@@ -161,13 +182,20 @@ export class EMAYClient extends EventEmitter {
     }
   }
 
-  get latestReading(): Reading | null { return this._latestReading; }
-  get isStreaming(): boolean { return this._status === Status.Streaming; }
+  get latestReading(): Reading | null {
+    return this._latestReading;
+  }
+  get isStreaming(): boolean {
+    return this._status === Status.Streaming;
+  }
 
   async start(address?: string): Promise<void> {
-    if (this._status === Status.Scanning ||
-        this._status === Status.Connecting ||
-        this._status === Status.Streaming) return;
+    if (
+      this._status === Status.Scanning ||
+      this._status === Status.Connecting ||
+      this._status === Status.Streaming
+    )
+      return;
     this.wantScan = true;
     if (address) this.knownAddress = address;
     this.status = Status.Scanning;
@@ -176,12 +204,19 @@ export class EMAYClient extends EventEmitter {
 
   async stop(): Promise<void> {
     this.wantScan = false;
-    if (this.heartbeatTimer) { clearInterval(this.heartbeatTimer); this.heartbeatTimer = null; }
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
     if (this.writeChar && this.peripheral) {
-      try { await this.writeChar.write(STOP_REALTIME); } catch {}
+      try {
+        await this.writeChar.write(STOP_REALTIME);
+      } catch {}
     }
     if (this.peripheral) {
-      try { await this.peripheral.disconnect(); } catch {}
+      try {
+        await this.peripheral.disconnect();
+      } catch {}
     }
     this.resetConnectionState();
     this.status = Status.Idle;
@@ -196,7 +231,12 @@ export class EMAYClient extends EventEmitter {
         }
       });
       // If noble already knows state, trigger manually
-      try { (this.adapter as any).noble?.emit("stateChange", (this.adapter as any).noble?.state); } catch {}
+      try {
+        (this.adapter as any).noble?.emit(
+          "stateChange",
+          (this.adapter as any).noble?.state,
+        );
+      } catch {}
     });
   }
 
@@ -219,7 +259,11 @@ export class EMAYClient extends EventEmitter {
       this.adapter.startScanning([SERVICE_UUID]).catch(resolve);
 
       setTimeout(() => {
-        if (!resolved) { this.adapter.stopScanning(); this.status = Status.Failed; resolve(); }
+        if (!resolved) {
+          this.adapter.stopScanning();
+          this.status = Status.Failed;
+          resolve();
+        }
       }, 10000);
     });
   }
@@ -232,11 +276,19 @@ export class EMAYClient extends EventEmitter {
       peripheral.on("disconnect", () => this.onDisconnect());
       const services = await peripheral.discoverServices();
       const svc = services.find((s: any) => s.uuid.includes(SERVICE_UUID));
-      if (!svc) { this.status = Status.Failed; return; }
+      if (!svc) {
+        this.status = Status.Failed;
+        return;
+      }
       const chars = await svc.discoverCharacteristics();
-      this.writeChar = chars.find((c: any) => c.uuid.includes(WRITE_UUID)) || null;
-      this.notifyChar = chars.find((c: any) => c.uuid.includes(NOTIFY_UUID)) || null;
-      if (!this.writeChar || !this.notifyChar) { this.status = Status.Failed; return; }
+      this.writeChar =
+        chars.find((c: any) => c.uuid.includes(WRITE_UUID)) || null;
+      this.notifyChar =
+        chars.find((c: any) => c.uuid.includes(NOTIFY_UUID)) || null;
+      if (!this.writeChar || !this.notifyChar) {
+        this.status = Status.Failed;
+        return;
+      }
 
       await this.notifyChar.subscribe(this.onData.bind(this));
       for (const cmd of START_SEQUENCE) {
@@ -275,9 +327,13 @@ export class EMAYClient extends EventEmitter {
     if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
     this.heartbeatTimer = setInterval(async () => {
       if (this._status !== Status.Streaming || !this.writeChar) return;
-      try { await this.writeChar.write(HEARTBEAT); } catch {}
-      if (this.lastReadingAt &&
-          (Date.now() - this.lastReadingAt.getTime()) > this.staleTimeout * 1000) {
+      try {
+        await this.writeChar.write(HEARTBEAT);
+      } catch {}
+      if (
+        this.lastReadingAt &&
+        Date.now() - this.lastReadingAt.getTime() > this.staleTimeout * 1000
+      ) {
         this._latestReading = null;
         this.downsampler.flush();
       }
@@ -285,7 +341,10 @@ export class EMAYClient extends EventEmitter {
   }
 
   private resetConnectionState(): void {
-    if (this.heartbeatTimer) { clearInterval(this.heartbeatTimer); this.heartbeatTimer = null; }
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
     this.peripheral = null;
     this.writeChar = null;
     this.notifyChar = null;

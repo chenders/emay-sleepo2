@@ -70,8 +70,9 @@ def _clocks_fell_back(instant: datetime, tz: timezone) -> bool:
     return before_dst and not instant_dst
 
 
-def parse_csv(content: str, timezone: timezone | None = None,
-              correct_dst_fold: bool = True) -> Tuple[List[Reading], List[str]]:
+def parse_csv(
+    content: str, timezone: timezone | None = None, correct_dst_fold: bool = True
+) -> Tuple[List[Reading], List[str]]:
     """Parse EMAY CSV content.
 
     Returns (readings, warnings). Raises ValueError if the file has no
@@ -115,8 +116,9 @@ def parse_csv(content: str, timezone: timezone | None = None,
     return readings, warnings
 
 
-def parse_csv_file(path: str | Path, timezone: timezone | None = None,
-                   correct_dst_fold: bool = True) -> Tuple[List[Reading], List[str]]:
+def parse_csv_file(
+    path: str | Path, timezone: timezone | None = None, correct_dst_fold: bool = True
+) -> Tuple[List[Reading], List[str]]:
     """Parse an EMAY CSV file from disk."""
     content = Path(path).read_text(encoding="utf-8")
     return parse_csv(content, timezone=timezone, correct_dst_fold=correct_dst_fold)

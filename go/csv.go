@@ -70,7 +70,7 @@ func (c *DSTFoldCorrector) locFellBack(instant time.Time) bool {
 	cur := searchStart
 	for !cur.After(searchEnd) {
 		_, after := cur.Zone()
-		_, afterNext := cur.Add(1*time.Second).Zone()
+		_, afterNext := cur.Add(1 * time.Second).Zone()
 		// Transition occurred if the offset changed
 		if after != afterNext {
 			return afterNext < after
@@ -85,7 +85,9 @@ func ParseCSV(content string, correctDST bool) (*CSVResult, error) {
 	lines := []string{}
 	for _, l := range strings.Split(content, "\n") {
 		l = strings.TrimSpace(l)
-		if l != "" { lines = append(lines, l) }
+		if l != "" {
+			lines = append(lines, l)
+		}
 	}
 	if len(lines) <= 1 {
 		return nil, fmt.Errorf("CSV file contains no data rows")
@@ -93,7 +95,9 @@ func ParseCSV(content string, correctDST bool) (*CSVResult, error) {
 
 	result := &CSVResult{}
 	var corrector *DSTFoldCorrector
-	if correctDST { corrector = NewDSTFoldCorrector() }
+	if correctDST {
+		corrector = NewDSTFoldCorrector()
+	}
 
 	// Parse date format: M/d/yyyy h:mm:ss a
 	layout := "1/2/2006 3:04:05 PM"
@@ -101,7 +105,9 @@ func ParseCSV(content string, correctDST bool) (*CSVResult, error) {
 	for i := 1; i < len(lines); i++ {
 		rowNum := i + 1
 		fields := strings.Split(lines[i], ",")
-		for j := range fields { fields[j] = strings.TrimSpace(fields[j]) }
+		for j := range fields {
+			fields[j] = strings.TrimSpace(fields[j])
+		}
 		if len(fields) < 2 {
 			result.Warnings = append(result.Warnings, fmt.Sprintf("Row %d: skipping", rowNum))
 			continue
@@ -114,14 +120,20 @@ func ParseCSV(content string, correctDST bool) (*CSVResult, error) {
 			continue
 		}
 
-		if corrector != nil { parsed = corrector.Corrected(parsed) }
+		if corrector != nil {
+			parsed = corrector.Corrected(parsed)
+		}
 
 		var spo2, pulse *int
 		if len(fields) > 2 && fields[2] != "" {
-			if v, err := strconv.Atoi(fields[2]); err == nil { spo2 = &v }
+			if v, err := strconv.Atoi(fields[2]); err == nil {
+				spo2 = &v
+			}
 		}
 		if len(fields) > 3 && fields[3] != "" {
-			if v, err := strconv.Atoi(fields[3]); err == nil { pulse = &v }
+			if v, err := strconv.Atoi(fields[3]); err == nil {
+				pulse = &v
+			}
 		}
 
 		result.Readings = append(result.Readings, Reading{SpO2: spo2, Pulse: pulse, Timestamp: parsed})
@@ -133,6 +145,8 @@ func ParseCSV(content string, correctDST bool) (*CSVResult, error) {
 // ParseCSVFile parses an EMAY CSV file from disk.
 func ParseCSVFile(path string, correctDST bool) (*CSVResult, error) {
 	data, err := os.ReadFile(path)
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 	return ParseCSV(string(data), correctDST)
 }

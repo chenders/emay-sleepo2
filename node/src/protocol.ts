@@ -60,7 +60,11 @@ export function command(payload: number[]): Buffer {
  */
 export function parseReading(raw: Buffer | Uint8Array): Reading | null {
   if (raw.length !== FRAME_LENGTH) return null;
-  if (raw[0] !== FRAME_HEADER[0] || raw[1] !== FRAME_HEADER[1] || raw[2] !== FRAME_HEADER[2])
+  if (
+    raw[0] !== FRAME_HEADER[0] ||
+    raw[1] !== FRAME_HEADER[1] ||
+    raw[2] !== FRAME_HEADER[2]
+  )
     return null;
   if (raw[5] !== FRAME_TRAILER[0] || raw[6] !== FRAME_TRAILER[1]) return null;
 
@@ -75,8 +79,10 @@ export function parseReading(raw: Buffer | Uint8Array): Reading | null {
   const pulse: number | null = SENTINEL_VALUES.has(rawPR) ? null : rawPR;
   const spo2: number | null = SENTINEL_VALUES.has(rawSpO2) ? null : rawSpO2;
 
-  if (pulse !== null && (pulse < PULSE_MIN_BPM || pulse > PULSE_MAX_BPM)) return null;
-  if (spo2 !== null && (spo2 < SPO2_MIN_PERCENT || spo2 > SPO2_MAX_PERCENT)) return null;
+  if (pulse !== null && (pulse < PULSE_MIN_BPM || pulse > PULSE_MAX_BPM))
+    return null;
+  if (spo2 !== null && (spo2 < SPO2_MIN_PERCENT || spo2 > SPO2_MAX_PERCENT))
+    return null;
 
   return { spo2, pulse, timestamp: new Date() };
 }

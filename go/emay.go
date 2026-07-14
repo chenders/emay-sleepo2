@@ -11,8 +11,8 @@ import (
 
 // Reading is a single physiological measurement from the EMAY SleepO2.
 type Reading struct {
-	SpO2      *int     // Oxygen saturation percent (0–100), nil = not acquired
-	Pulse     *int     // Pulse rate in bpm, nil = not acquired
+	SpO2      *int // Oxygen saturation percent (0–100), nil = not acquired
+	Pulse     *int // Pulse rate in bpm, nil = not acquired
 	Timestamp time.Time
 }
 
@@ -40,15 +40,24 @@ const (
 
 func (s Status) String() string {
 	switch s {
-	case StatusIdle: return "idle"
-	case StatusScanning: return "scanning"
-	case StatusConnecting: return "connecting"
-	case StatusStreaming: return "streaming"
-	case StatusBluetoothOff: return "bluetoothOff"
-	case StatusBluetoothUnauthorized: return "bluetoothUnauthorized"
-	case StatusBluetoothUnsupported: return "bluetoothUnsupported"
-	case StatusFailed: return "failed"
-	default: return "unknown"
+	case StatusIdle:
+		return "idle"
+	case StatusScanning:
+		return "scanning"
+	case StatusConnecting:
+		return "connecting"
+	case StatusStreaming:
+		return "streaming"
+	case StatusBluetoothOff:
+		return "bluetoothOff"
+	case StatusBluetoothUnauthorized:
+		return "bluetoothUnauthorized"
+	case StatusBluetoothUnsupported:
+		return "bluetoothUnsupported"
+	case StatusFailed:
+		return "failed"
+	default:
+		return "unknown"
 	}
 }
 
@@ -90,23 +99,23 @@ type BLECharacteristic interface {
 
 // Client manages a connection to the EMAY SleepO2.
 type Client struct {
-	adapter      BLEAdapter
-	status       Status
-	OnReading    func(Reading)
-	OnStatus     func(Status)
-	OnMinute     func([]MinuteSample)
-	peripheral   BLEPeripheral
-	writeChar    BLECharacteristic
-	notifyChar   BLECharacteristic
-	latest       *Reading
-	lastReadAt   time.Time
-	wantScan     bool
-	hbDone       chan struct{}
-	downsampler  LiveDownsampler
-	knownAddr    string
+	adapter       BLEAdapter
+	status        Status
+	OnReading     func(Reading)
+	OnStatus      func(Status)
+	OnMinute      func([]MinuteSample)
+	peripheral    BLEPeripheral
+	writeChar     BLECharacteristic
+	notifyChar    BLECharacteristic
+	latest        *Reading
+	lastReadAt    time.Time
+	wantScan      bool
+	hbDone        chan struct{}
+	downsampler   LiveDownsampler
+	knownAddr     string
 	autoReconnect bool
-	hbInterval   time.Duration
-	staleTimeout time.Duration
+	hbInterval    time.Duration
+	staleTimeout  time.Duration
 }
 
 // NewClient creates a client with the given BLE adapter.
@@ -114,7 +123,7 @@ func NewClient(adapter BLEAdapter) *Client {
 	return &Client{
 		adapter:       adapter,
 		status:        StatusIdle,
-		autoReconnect:  true,
+		autoReconnect: true,
 		hbInterval:    1500 * time.Millisecond,
 		staleTimeout:  4 * time.Second,
 		downsampler:   *NewLiveDownsampler(2),
@@ -127,7 +136,9 @@ func (c *Client) Status() Status { return c.status }
 func (c *Client) setStatus(s Status) {
 	if c.status != s {
 		c.status = s
-		if c.OnStatus != nil { c.OnStatus(s) }
+		if c.OnStatus != nil {
+			c.OnStatus(s)
+		}
 	}
 }
 
@@ -140,9 +151,13 @@ func (c *Client) IsStreaming() bool { return c.status == StatusStreaming }
 // Start begins monitoring for the oximeter. If addr is non-empty,
 // connects to that specific device.
 func (c *Client) Start(addr string) error {
-	if c.status.IsActive() { return nil }
+	if c.status.IsActive() {
+		return nil
+	}
 	c.wantScan = true
-	if addr != "" { c.knownAddr = addr }
+	if addr != "" {
+		c.knownAddr = addr
+	}
 	c.setStatus(StatusScanning)
 	return c.beginMonitoring()
 }
@@ -150,7 +165,10 @@ func (c *Client) Start(addr string) error {
 // Stop ends streaming and disconnects.
 func (c *Client) Stop() error {
 	c.wantScan = false
-	if c.hbDone != nil { close(c.hbDone); c.hbDone = nil }
+	if c.hbDone != nil {
+		close(c.hbDone)
+		c.hbDone = nil
+	}
 	if c.writeChar != nil {
 		c.writeChar.Write(stopRealtime)
 	}
@@ -201,12 +219,20 @@ func (c *Client) connectAndStream(addr string) error {
 	}
 
 	for _, svc := range services {
-		if !containsUUID(svc.UUID(), serviceUUID) { continue }
+		if !containsUUID(svc.UUID(), serviceUUID) {
+			continue
+		}
 		chars, err := svc.DiscoverCharacteristics()
-		if err != nil { continue }
+		if err != nil {
+			continue
+		}
 		for _, ch := range chars {
-			if containsUUID(ch.UUID(), writeUUID) { c.writeChar = ch }
-			if containsUUID(ch.UUID(), notifyUUID) { c.notifyChar = ch }
+			if containsUUID(ch.UUID(), writeUUID) {
+				c.writeChar = ch
+			}
+			if containsUUID(ch.UUID(), notifyUUID) {
+				c.notifyChar = ch
+			}
 		}
 	}
 
@@ -217,12 +243,18 @@ func (c *Client) connectAndStream(addr string) error {
 
 	c.notifyChar.Subscribe(func(data []byte) {
 		reading := parseReading(data)
-		if reading == nil { return }
+		if reading == nil {
+			return
+		}
 		c.latest = reading
 		c.lastReadAt = time.Now()
-		if c.OnReading != nil { c.OnReading(*reading) }
+		if c.OnReading != nil {
+			c.OnReading(*reading)
+		}
 		minutes := c.downsampler.Add(*reading)
-		if len(minutes) > 0 && c.OnMinute != nil { c.OnMinute(minutes) }
+		if len(minutes) > 0 && c.OnMinute != nil {
+			c.OnMinute(minutes)
+		}
 	})
 
 	// Serialized start sequence
@@ -248,9 +280,15 @@ func (c *Client) startHeartbeat() {
 			case <-c.hbDone:
 				return
 			case <-ticker.C:
-				if c.status != StatusStreaming { return }
-				if c.writeChar != nil { c.writeChar.Write(heartbeat) }
-				if c.lastReadAt.IsZero() { continue }
+				if c.status != StatusStreaming {
+					return
+				}
+				if c.writeChar != nil {
+					c.writeChar.Write(heartbeat)
+				}
+				if c.lastReadAt.IsZero() {
+					continue
+				}
 				if time.Since(c.lastReadAt) > c.staleTimeout {
 					c.latest = nil
 					c.downsampler.Flush()
@@ -261,7 +299,10 @@ func (c *Client) startHeartbeat() {
 }
 
 func (c *Client) resetState() {
-	if c.hbDone != nil { close(c.hbDone); c.hbDone = nil }
+	if c.hbDone != nil {
+		close(c.hbDone)
+		c.hbDone = nil
+	}
 	c.peripheral = nil
 	c.writeChar = nil
 	c.notifyChar = nil

@@ -45,14 +45,16 @@ struct EMAYProtocolTests {
         let bytes: [UInt8] = [0xEB, 0x01, 0x05, 0x3E, 0x62, 0x7F, 0x00, 0x00]
         // Checksum of first 7 bytes: 0xEB+0x01+0x05+0x3E+0x62+0x7F+0x00 =
         // 235+1+5+62+98+127+0 = 528, 528 & 0x7F = 16 → 0x10
-        let cks = UInt8((235+1+5+62+98+127+0) & 0x7F)
+        let sum = 235 + 1 + 5 + 62 + 98 + 127 + 0
+        let cks = UInt8(sum & 0x7F)
         var frame = bytes
         frame[7] = cks
 
         let reading = EMAYProtocol.parseReading(frame)
         #expect(reading != nil)
-        #expect(reading?.pulse == 62)
-        #expect(reading?.spo2 == 98)
+        let unwrapped = reading!
+        #expect(unwrapped.pulse == 62)
+        #expect(unwrapped.spo2 == 98)
     }
 
     // MARK: - Frame validation: invalid frames
@@ -91,8 +93,9 @@ struct EMAYProtocolTests {
         frame[7] = UInt8(frame[0..<7].reduce(0, +) & 0x7F)
         let reading = EMAYProtocol.parseReading(frame)
         #expect(reading != nil)
-        #expect(reading?.pulse == nil)
-        #expect(reading?.spo2 == 98)
+        let r = reading!
+        #expect(r.pulse == nil)
+        #expect(r.spo2 == 98)
     }
 
     @Test("PR=0xFF means no pulse")
@@ -101,7 +104,8 @@ struct EMAYProtocolTests {
         frame[7] = UInt8(frame[0..<7].reduce(0, +) & 0x7F)
         let reading = EMAYProtocol.parseReading(frame)
         #expect(reading != nil)
-        #expect(reading?.pulse == nil)
+        let r = reading!
+        #expect(r.pulse == nil)
     }
 
     @Test("SpO2=0x00 means no SpO2")
@@ -110,8 +114,9 @@ struct EMAYProtocolTests {
         frame[7] = UInt8(frame[0..<7].reduce(0, +) & 0x7F)
         let reading = EMAYProtocol.parseReading(frame)
         #expect(reading != nil)
-        #expect(reading?.spo2 == nil)
-        #expect(reading?.pulse == 62)
+        let r = reading!
+        #expect(r.spo2 == nil)
+        #expect(r.pulse == 62)
     }
 
     @Test("SpO2=0xFF means no SpO2")
@@ -120,7 +125,8 @@ struct EMAYProtocolTests {
         frame[7] = UInt8(frame[0..<7].reduce(0, +) & 0x7F)
         let reading = EMAYProtocol.parseReading(frame)
         #expect(reading != nil)
-        #expect(reading?.spo2 == nil)
+        let r = reading!
+        #expect(r.spo2 == nil)
     }
 
     @Test("both sentinels → pulse and SpO2 nil")
@@ -129,8 +135,9 @@ struct EMAYProtocolTests {
         frame[7] = UInt8(frame[0..<7].reduce(0, +) & 0x7F)
         let reading = EMAYProtocol.parseReading(frame)
         #expect(reading != nil)
-        #expect(reading?.pulse == nil)
-        #expect(reading?.spo2 == nil)
+        let r = reading!
+        #expect(r.pulse == nil)
+        #expect(r.spo2 == nil)
     }
 
     // MARK: - Plausibility bounds

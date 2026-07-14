@@ -6,7 +6,12 @@ import assert from "node:assert/strict";
 import { LiveDownsampler } from "../src/downsampler.js";
 import { Reading } from "../src/types.js";
 
-function reading(spo2: number | null, pulse: number | null, minute = 10, second = 30): Reading {
+function reading(
+  spo2: number | null,
+  pulse: number | null,
+  minute = 10,
+  second = 30,
+): Reading {
   const ts = new Date(2026, 4, 8, 16, minute, second); // month 0-indexed
   return { spo2, pulse, timestamp: ts };
 }
@@ -25,10 +30,10 @@ describe("LiveDownsampler", () => {
     ds.add(reading(98, 60, 10, 30));
     ds.add(reading(96, 62, 10, 31));
     const result = ds.flush();
-    const spo2Sample = result.find(r => r.metricType === "SpO2")!;
+    const spo2Sample = result.find((r) => r.metricType === "SpO2")!;
     assert.ok(spo2Sample);
     assert.equal(spo2Sample.value, 0.97);
-    const pulseSample = result.find(r => r.metricType === "PulseRate")!;
+    const pulseSample = result.find((r) => r.metricType === "PulseRate")!;
     assert.equal(pulseSample.value, 61.0);
   });
 
@@ -55,7 +60,7 @@ describe("LiveDownsampler", () => {
     ds.add(reading(98, null, 10, 30));
     ds.add(reading(96, 60, 10, 31));
     const result = ds.flush();
-    const pulseSamples = result.filter(r => r.metricType === "PulseRate");
+    const pulseSamples = result.filter((r) => r.metricType === "PulseRate");
     assert.equal(pulseSamples.length, 0);
   });
 

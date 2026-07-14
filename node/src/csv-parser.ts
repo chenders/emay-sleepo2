@@ -24,7 +24,10 @@ export class DSTFoldCorrector {
 
   /** Feed naively parsed timestamps in file order. */
   corrected(parsed: Date): Date {
-    if (!this.previous) { this.previous = parsed; return parsed; }
+    if (!this.previous) {
+      this.previous = parsed;
+      return parsed;
+    }
 
     if (this.offset > 0 && parsed >= this.previous) {
       this.offset = 0;
@@ -63,26 +66,38 @@ export class DSTFoldCorrector {
 }
 
 /** Parse EMAY CSV content. */
-export function parseCSV(content: string, timezoneOffset?: number,
-                          correctDSTFold: boolean = true): CSVResult {
-  const lines = content.split(/\r?\n/).map(s => s.trim()).filter(s => s);
+export function parseCSV(
+  content: string,
+  timezoneOffset?: number,
+  correctDSTFold: boolean = true,
+): CSVResult {
+  const lines = content
+    .split(/\r?\n/)
+    .map((s) => s.trim())
+    .filter((s) => s);
   if (lines.length <= 1) throw new Error("CSV file contains no data rows");
 
   const readings: Reading[] = [];
   const warnings: string[] = [];
-  const corrector = correctDSTFold ? new DSTFoldCorrector(timezoneOffset) : null;
+  const corrector = correctDSTFold
+    ? new DSTFoldCorrector(timezoneOffset)
+    : null;
 
   for (let i = 1; i < lines.length; i++) {
     const rowNum = i + 1;
-    const fields = lines[i].split(",").map(s => s.trim());
+    const fields = lines[i].split(",").map((s) => s.trim());
     if (fields.length < 2) {
-      warnings.push(`Row ${rowNum}: skipping — expected at least date,time columns`);
+      warnings.push(
+        `Row ${rowNum}: skipping — expected at least date,time columns`,
+      );
       continue;
     }
 
     const dateStr = `${fields[0]} ${fields[1]}`;
     // Manual parse: M/d/yyyy h:mm:ss a — avoid new Date() ambiguity
-    const parts = dateStr.match(/(\d+)\/(\d+)\/(\d+)\s+(\d+):(\d+):(\d+)\s+(AM|PM)/i);
+    const parts = dateStr.match(
+      /(\d+)\/(\d+)\/(\d+)\s+(\d+):(\d+):(\d+)\s+(AM|PM)/i,
+    );
     if (!parts) {
       warnings.push(`Row ${rowNum}: skipping — invalid date/time '${dateStr}'`);
       continue;
@@ -97,7 +112,7 @@ export function parseCSV(content: string, timezoneOffset?: number,
       parseInt(day),
       h,
       parseInt(min),
-      parseInt(sec)
+      parseInt(sec),
     );
     if (isNaN(parsed.getTime())) {
       warnings.push(`Row ${rowNum}: skipping — invalid date/time '${dateStr}'`);
@@ -108,15 +123,22 @@ export function parseCSV(content: string, timezoneOffset?: number,
     const spo2 = fields.length > 2 && fields[2] ? parseInt(fields[2]) : null;
     const pulse = fields.length > 3 && fields[3] ? parseInt(fields[3]) : null;
 
-    readings.push({ spo2: isNaN(spo2!) ? null : spo2, pulse: isNaN(pulse!) ? null : pulse, timestamp });
+    readings.push({
+      spo2: isNaN(spo2!) ? null : spo2,
+      pulse: isNaN(pulse!) ? null : pulse,
+      timestamp,
+    });
   }
 
   return { readings, warnings };
 }
 
 /** Parse an EMAY CSV file from disk (Node.js only). */
-export function parseCSVFile(path: string, timezoneOffset?: number,
-                              correctDSTFold: boolean = true): CSVResult {
+export function parseCSVFile(
+  path: string,
+  timezoneOffset?: number,
+  correctDSTFold: boolean = true,
+): CSVResult {
   const content = fs.readFileSync(path, "utf-8");
   return parseCSV(content, timezoneOffset, correctDSTFold);
 }
