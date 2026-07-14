@@ -17,7 +17,11 @@ The crate is not yet published to crates.io — depend on it via git:
 ```toml
 [dependencies]
 emay-sleepo2 = { git = "https://github.com/chenders/emay-sleepo2", features = ["ble"] }
+tokio = { version = "1", features = ["full"] }
 ```
+
+The client is async — the examples below use [tokio](https://tokio.rs) as
+the runtime, so add it to your own dependencies too.
 
 The `ble` feature pulls in [btleplug](https://github.com/deviceplug/btleplug)
 (plus tokio, uuid, and futures) and supports macOS, Linux, and Windows.
