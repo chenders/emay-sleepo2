@@ -9,7 +9,7 @@ use tokio::sync::Mutex;
 use tokio::time;
 use uuid::Uuid;
 
-use crate::protocol::{self, *};
+use crate::protocol::*;
 use crate::types::{MinuteSample, Reading, Status};
 use crate::downsampler::LiveDownsampler;
 
@@ -90,7 +90,7 @@ impl EMAYClient {
             .map_err(|e| format!("scan: {}", e))?;
 
         // Wait for a matching device
-        let peripheral = loop {
+        loop {
             let peripherals = self.adapter.peripherals().await.map_err(|e| format!("{}", e))?;
             for p in peripherals {
                 let props = p.properties().await.ok().flatten();
@@ -119,7 +119,6 @@ impl EMAYClient {
             .await
             .map_err(|e| format!("discover: {}", e))?;
 
-        let svc_uuid = Uuid::parse_str(SERVICE_UUID).unwrap();
         let write_uuid = Uuid::parse_str(WRITE_UUID).unwrap();
         let notify_uuid = Uuid::parse_str(NOTIFY_UUID).unwrap();
 
@@ -183,8 +182,8 @@ impl EMAYClient {
 
     async fn start_heartbeat_loop(&self, peripheral: Peripheral, write_char: btleplug::api::Characteristic) -> Result<(), String> {
         let status = self.status.clone();
-        let latest = self.latest_reading.clone();
-        let stale = self.stale_timeout;
+        let _latest = self.latest_reading.clone();
+        let _stale = self.stale_timeout;
         let interval = self.heartbeat_interval;
         let downsampler = Arc::new(Mutex::new(LiveDownsampler::new()));
 

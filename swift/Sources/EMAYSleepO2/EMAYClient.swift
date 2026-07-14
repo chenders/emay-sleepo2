@@ -263,15 +263,15 @@ public final class EMAYClient: NSObject, @unchecked Sendable {
 // MARK: - CBCentralManagerDelegate
 
 extension EMAYClient: CBCentralManagerDelegate {
-    public nonisolated func centralManager(
+    public func centralManager(
         _ central: CBCentralManager,
         willRestoreState dict: [String: Any]
     ) {
         let restored = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral] ?? []
         guard !restored.isEmpty else { return }
-        let peripheral = restored[0]
         Task { @MainActor [weak self] in
             guard let self, self.peripheral == nil else { return }
+            let peripheral = restored[0]
             peripheral.delegate = self
             self.peripheral = peripheral
             self.wantScan = true
@@ -279,7 +279,7 @@ extension EMAYClient: CBCentralManagerDelegate {
         }
     }
 
-    public nonisolated func centralManagerDidUpdateState(_ central: CBCentralManager) {
+    public func centralManagerDidUpdateState(_ central: CBCentralManager) {
         Task { @MainActor [weak self] in
             guard let self else { return }
             switch central.state {
@@ -307,7 +307,7 @@ extension EMAYClient: CBCentralManagerDelegate {
         }
     }
 
-    public nonisolated func centralManager(
+    public func centralManager(
         _ central: CBCentralManager,
         didDiscover peripheral: CBPeripheral,
         advertisementData: [String: Any],
@@ -328,7 +328,7 @@ extension EMAYClient: CBCentralManagerDelegate {
         }
     }
 
-    public nonisolated func centralManager(
+    public func centralManager(
         _ central: CBCentralManager,
         didConnect peripheral: CBPeripheral
     ) {
@@ -339,7 +339,7 @@ extension EMAYClient: CBCentralManagerDelegate {
         }
     }
 
-    public nonisolated func centralManager(
+    public func centralManager(
         _ central: CBCentralManager,
         didFailToConnect peripheral: CBPeripheral,
         error: Error?
@@ -356,7 +356,7 @@ extension EMAYClient: CBCentralManagerDelegate {
         }
     }
 
-    public nonisolated func centralManager(
+    public func centralManager(
         _ central: CBCentralManager,
         didDisconnectPeripheral peripheral: CBPeripheral,
         error: Error?
@@ -378,7 +378,7 @@ extension EMAYClient: CBCentralManagerDelegate {
 // MARK: - CBPeripheralDelegate
 
 extension EMAYClient: CBPeripheralDelegate {
-    public nonisolated func peripheral(
+    public func peripheral(
         _ peripheral: CBPeripheral,
         didDiscoverServices error: Error?
     ) {
@@ -400,7 +400,7 @@ extension EMAYClient: CBPeripheralDelegate {
         }
     }
 
-    public nonisolated func peripheral(
+    public func peripheral(
         _ peripheral: CBPeripheral,
         didDiscoverCharacteristicsFor service: CBService,
         error: Error?
@@ -422,7 +422,7 @@ extension EMAYClient: CBPeripheralDelegate {
         }
     }
 
-    public nonisolated func peripheral(
+    public func peripheral(
         _ peripheral: CBPeripheral,
         didUpdateNotificationStateFor characteristic: CBCharacteristic,
         error: Error?
@@ -441,7 +441,7 @@ extension EMAYClient: CBPeripheralDelegate {
         }
     }
 
-    public nonisolated func peripheral(
+    public func peripheral(
         _ peripheral: CBPeripheral,
         didWriteValueFor characteristic: CBCharacteristic,
         error: Error?
@@ -464,7 +464,7 @@ extension EMAYClient: CBPeripheralDelegate {
         }
     }
 
-    public nonisolated func peripheral(
+    public func peripheral(
         _ peripheral: CBPeripheral,
         didUpdateValueFor characteristic: CBCharacteristic,
         error: Error?
