@@ -12,6 +12,15 @@ impl DSTFoldCorrector {
     pub fn new() -> Self {
         Self { offset: 0.0, previous: None, tz_is_dst_aware: false }
     }
+}
+
+impl Default for DSTFoldCorrector {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl DSTFoldCorrector {
 
     pub fn with_dst() -> Self {
         Self { offset: 0.0, previous: None, tz_is_dst_aware: true }
