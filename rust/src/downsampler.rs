@@ -26,11 +26,9 @@ impl LiveDownsampler {
         let minute = start_of_minute(reading.timestamp_secs);
         let mut flushed = Vec::new();
 
-        if let Some(cur) = self.current_minute {
-            if minute != cur {
+        if let Some(cur) = self.current_minute && minute != cur {
                 flushed = self.finalize_locked();
             }
-        }
 
         self.current_minute = Some(minute);
         if let Some(s) = reading.spo2 { self.spo2_values.push(s as f64); }

@@ -26,7 +26,6 @@ const FRAME_TRAILER: [u8; 2] = [0x7F, 0x00];
 // ---- Plausibility bounds ----
 const PULSE_MIN_BPM: u8 = 30;
 const PULSE_MAX_BPM: u8 = 220;
-const SPO2_MIN_PCT: u8 = 0;
 const SPO2_MAX_PCT: u8 = 100;
 const SENTINEL_VALUES: [u8; 2] = [0x00, 0xFF];
 

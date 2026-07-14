@@ -159,8 +159,9 @@ impl EMAYClient {
                         }
                         let mut ds = downsampler.blocking_lock();
                         let minutes = ds.add(&reading);
+                        let mcb = minute_cb.blocking_lock();
                         if !minutes.is_empty() {
-                            if let Some(cb) = minute_cb.blocking_lock().as_ref() {
+                            if let Some(cb) = mcb.as_ref() {
                                 cb(minutes);
                             }
                         }

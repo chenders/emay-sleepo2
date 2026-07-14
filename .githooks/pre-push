@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Pre-push hook: run all checks to catch CI failures locally.
+# Failures here match what CI enforces.
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+FAILED=()
+
+section() { echo "===> $*"; }
+
+# ---- Go ----
+section "Go: vet + test"
+(cd "$ROOT/go" && go vet ./... && go test ./... -count=1) || FAILED+=("go")
+
+# ---- Python ----
+section "Python: ruff + test"
+(cd "$ROOT/python" && ruff check src/ tests/ && PYTHONPATH=src python -m pytest tests/ -q) || FAILED+=("python")
+
+# ---- Node ----
+section "Node: tsc + test"
+(
+    NPM="${NPM:-npm}"
+    cd "$ROOT/node"
+    "$NPM" ci --silent
+    npx tsc --noEmit
+    node --import tsx --test tests/*.test.ts
+) || FAILED+=("node")
+
+# ---- Rust ----
+section "Rust: clippy -D warnings + test"
+(
+    # Find cargo in common locations (non-interactive shells may not have it on PATH)
+    CARGO="${CARGO:-$HOME/.cargo/bin/cargo}"
+    if ! command -v "$CARGO" &>/dev/null; then
+        CARGO="$(command -v cargo 2>/dev/null || echo '')"
+    fi
+    if [ -z "$CARGO" ]; then
+        echo "SKIP: cargo not found (install rustup)"
+    else
+        cd "$ROOT/rust"
+        "$CARGO" clippy --features ble -- -D warnings
+        "$CARGO" test --features ble -q
+    fi
+) || FAILED+=("rust")
+
+# ---- Summary ----
+if [ ${#FAILED[@]} -eq 0 ]; then
+    echo ""
+    echo "All pre-push checks passed."
+    exit 0
+else
+    echo ""
+    echo "FAILED: ${FAILED[*]}"
+    exit 1
+fi
