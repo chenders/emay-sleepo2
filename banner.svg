@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 300" width="880" height="300"
+     role="img" aria-labelledby="hs-title hs-desc" font-family="ui-monospace, 'SF Mono', Menlo, monospace">
+  <title id="hs-title">EMAY SleepO2 BLE SDK — the handshake</title>
+  <desc id="hs-desc">The EMAY SleepO2 oximeter reads SpO2 97 percent, but the phone can't decode the Bluetooth protocol and shows an error. A spec.md card decodes it; the 8-byte frame EB 01 05 3E 61 7F 00 4A streams across a Bluetooth arc, shrinks into the phone screen, and its gold bytes 3E and 61 become the gold-then-settled numbers 62 bpm and 97 percent alongside a live pulse waveform.</desc>
+
+  <defs>
+    <linearGradient id="hs-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0c1219"/><stop offset="1" stop-color="#090d12"/>
+    </linearGradient>
+    <clipPath id="hs-screen"><rect x="82" y="60" width="126" height="180" rx="10"/></clipPath>
+    <style>
+      /* ---- opacity beat-gates (10s master loop); joy tableau RELEASES 94->100% to close the seam ---- */
+      .fr{animation:hsfr 10s linear infinite both}
+      .frP{animation:hsfrP 10s linear infinite both}
+      .di{animation:hsdi 10s linear infinite both}
+      .co{animation:hsco 10s linear infinite both}
+      .jo{animation:hsjo 10s linear infinite both}
+      @keyframes hsfr{0%{opacity:0}3%{opacity:1}20%{opacity:1}25%{opacity:0}100%{opacity:0}}
+      @keyframes hsfrP{0%{opacity:0}3%{opacity:1}61%{opacity:1}67%{opacity:0}100%{opacity:0}}
+      @keyframes hsdi{0%,22%{opacity:0}28%{opacity:1}40%{opacity:1}45%{opacity:0}100%{opacity:0}}
+      @keyframes hsco{0%,42%{opacity:0}47%{opacity:1}94%{opacity:1}100%{opacity:0}}
+      @keyframes hsjo{0%,64%{opacity:0}70%{opacity:1}94%{opacity:1}100%{opacity:0}}
+
+      /* ---- motion ---- */
+      .spec{animation:hsspec 10s ease-out infinite both}    /* flat settle — the one meaningful overshoot is saved for the smile */
+      @keyframes hsspec{0%,22%{transform:translateY(-24px)}32%{transform:translateY(0)}100%{transform:translateY(0)}}
+
+      /* frame chip travels the arc, then SHRINKS into the phone screen (absorption); lands at exact screen center */
+      .frame{transform-box:fill-box;transform-origin:center;animation:hsframe 10s cubic-bezier(.4,0,.2,1) infinite both}
+      @keyframes hsframe{
+        0%,42%{opacity:0;transform:translate(0,0) scale(1)}
+        46%{opacity:1;transform:translate(0,0) scale(1)}
+        53%{transform:translate(-135px,-52px) scale(1)}
+        59%{transform:translate(-255px,-68px) scale(1)}
+        63%{transform:translate(-395px,-40px) scale(.9)}
+        66.5%{opacity:1;transform:translate(-545px,0) scale(.5)}
+        69%{opacity:0;transform:translate(-545px,0) scale(.38)}
+        100%{opacity:0}
+      }
+
+      /* the bytes BECOME the numbers: born gold on landing, settle to resting color */
+      .res97{animation:hsres97 10s linear infinite both}
+      .res62{animation:hsres62 10s linear infinite both}
+      @keyframes hsres97{0%,67%{fill:#ffcf5c}82%{fill:#2ee6c8}100%{fill:#2ee6c8}}
+      @keyframes hsres62{0%,67%{fill:#ffcf5c}82%{fill:#e8eef2}100%{fill:#e8eef2}}
+
+      .ring{transform-box:fill-box;transform-origin:center;animation:hsring 1.7s ease-out infinite}
+      .ring.b{animation-delay:.85s}
+      @keyframes hsring{0%{transform:scale(.35);opacity:.6}100%{transform:scale(1.7);opacity:0}}
+
+      .ecg{animation:hsecg 2s linear infinite}    /* -50px == one 50px pattern period: seamless scroll */
+      @keyframes hsecg{from{transform:translateX(0)}to{transform:translateX(-50px)}}
+
+      .beatdot{transform-box:fill-box;transform-origin:center;animation:hsbeat 1s ease-out infinite}
+      @keyframes hsbeat{0%,70%{transform:scale(1);opacity:.9}12%{transform:scale(1.5);opacity:1}30%{transform:scale(1);opacity:.6}}
+
+      .hop{animation:hshop 10s ease-in-out infinite both}
+      @keyframes hshop{0%,67%{transform:translateY(0)}73%{transform:translateY(-7px)}80%{transform:translateY(0)}100%{transform:translateY(0)}}
+
+      /* single mouth: frown -> flat -> lifts in ANTICIPATION during connection -> smile (the kept overshoot) -> flat at the seam */
+      .mouth{transform-box:fill-box;transform-origin:center;animation:hsmouth 10s ease-in-out infinite both}
+      @keyframes hsmouth{
+        0%,20%{transform:scaleY(-1)}
+        30%{transform:scaleY(-0.35)}
+        42%{transform:scaleY(0.14)}
+        56%{transform:scaleY(0.4)}
+        68%{transform:scaleY(1.18)}
+        74%{transform:scaleY(1)}
+        93%{transform:scaleY(1)}
+        98%{transform:scaleY(0.12)}
+        100%{transform:scaleY(-1)}
+      }
+
+      .thesis{animation:hsthesis 10s ease-out infinite both}
+      @keyframes hsthesis{0%,50%{opacity:0}60%{opacity:1}94%{opacity:1}100%{opacity:0}}
+
+      .arc{stroke-dasharray:3 7;opacity:.85;animation:hsarcpan 3s linear infinite}
+      @keyframes hsarcpan{from{stroke-dashoffset:0}to{stroke-dashoffset:-200}}
+
+      /* reduced-motion: freeze on the SETTLED payoff frame (t=8.5s), not the released-to-empty seam frame */
+      @media (prefers-reduced-motion:reduce){
+        svg *{animation-play-state:paused!important;animation-delay:-8.5s!important}
+      }
+    </style>
+  </defs>
+
+  <rect width="880" height="300" rx="18" fill="url(#hs-bg)"/>
+  <rect x="1" y="1" width="878" height="298" rx="17" fill="none" stroke="#1a2530" stroke-width="1"/>
+
+  <!-- ============ EMAY device (right) — always measuring 97 ============ -->
+  <g transform="translate(690,110)">
+    <rect x="0" y="0" width="150" height="90" rx="16" fill="#161f28" stroke="#2b3a48"/>
+    <rect x="14" y="16" width="122" height="42" rx="8" fill="#0b141a"/>
+    <text x="75" y="42" text-anchor="middle" font-size="18" fill="#57d68d" font-weight="700">SpO&#8322; 97</text>
+    <text x="75" y="76" text-anchor="middle" font-size="12" fill="#8798a6">EMAY SleepO2</text>
+    <rect x="150" y="30" width="16" height="30" rx="4" fill="#232f3b"/>
+    <circle cx="128" cy="24" r="3" fill="#57d68d"/>
+  </g>
+
+  <!-- ============ Bluetooth arc + ripples (connection) ============ -->
+  <g class="co"><path class="arc" d="M690 155 Q455 72 220 150" fill="none" stroke="#2ee6c8" stroke-width="2" stroke-linecap="round"/></g>
+  <g class="co" transform="translate(690,155)">
+    <circle class="ring"   r="15" fill="none" stroke="#2ee6c8" stroke-width="2"/>
+    <circle class="ring b" r="15" fill="none" stroke="#2ee6c8" stroke-width="2"/>
+  </g>
+
+  <!-- ============ frustration: broken link (early) ============ -->
+  <g class="fr">
+    <path d="M300 150 L372 150" stroke="#ff5c6c" stroke-width="3" stroke-dasharray="7 8" stroke-linecap="round"/>
+    <path d="M408 150 L500 150" stroke="#ff5c6c" stroke-width="3" stroke-dasharray="7 8" stroke-linecap="round"/>
+    <path d="M382 130 L398 150 L382 150 L398 170" fill="none" stroke="#ff5c6c" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+
+  <!-- ============ discovery: spec.md card (cyan) ============ -->
+  <g transform="translate(356,30)"><g class="di"><g class="spec">
+    <rect x="0" y="0" width="170" height="60" rx="12" fill="#12202b" stroke="#2ee6c8"/>
+    <text x="85" y="26" text-anchor="middle" font-size="15" fill="#7ff0dd" font-weight="700">spec.md</text>
+    <text x="85" y="46" text-anchor="middle" font-size="12" fill="#c9d3db">protocol decoded &#10003;</text>
+  </g></g></g>
+
+  <!-- ============ phone (left) ============ -->
+  <g transform="translate(70,44)">
+    <rect x="0" y="0" width="150" height="212" rx="22" fill="#12202b" stroke="#2b3a48"/>
+    <rect x="12" y="16" width="126" height="180" rx="10" fill="#0b141a"/>
+    <rect x="58" y="8" width="34" height="5" rx="2.5" fill="#2b3a48"/>
+    <!-- error screen: persists through transit, hands off to the readout on landing -->
+    <g class="frP">
+      <text x="75" y="96" text-anchor="middle" font-size="34" fill="#ff5c6c">&#10005;</text>
+      <text x="75" y="126" text-anchor="middle" font-size="13" fill="#ff8a95">FF12 ??</text>
+      <text x="75" y="146" text-anchor="middle" font-size="12" fill="#8798a6">can't decode</text>
+    </g>
+    <!-- live readout — numbers born gold (the payload), settle to resting color -->
+    <g clip-path="url(#hs-screen)" transform="translate(-70,-44)">
+      <g class="jo" transform="translate(70,44)">
+        <text class="res97" x="75" y="74" text-anchor="middle" font-size="30" font-weight="700">97%</text>
+        <text x="75" y="94" text-anchor="middle" font-size="12" fill="#8798a6">SpO&#8322;</text>
+        <text class="res62" x="75" y="128" text-anchor="middle" font-size="18">62 bpm</text>
+        <g transform="translate(16,168)"><g class="ecg">
+          <path d="M0 0 h14 l6 -20 l6 34 l6 -14 h18 M50 0 h14 l6 -20 l6 34 l6 -14 h18 M100 0 h14 l6 -20 l6 34 l6 -14 h18 M150 0 h14 l6 -20 l6 34 l6 -14 h18 M200 0 h14 l6 -20 l6 34 l6 -14 h18"
+                fill="none" stroke="#2ee6c8" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+        </g></g>
+        <circle class="beatdot" cx="122" cy="120" r="3.5" fill="#57d68d"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- ============ streaming frame — full 8 bytes, gold payload, shrinks into the screen ============ -->
+  <g transform="translate(690,150)"><g class="frame">
+    <rect x="-95" y="-15" width="190" height="30" rx="7" fill="#0e1b24" stroke="#2ee6c8"/>
+    <text x="0" y="5" text-anchor="middle" font-size="12.5" fill="#7ff0dd">EB 01 05 <tspan fill="#ffcf5c" font-weight="700">3E 61</tspan> 7F 00 4A</text>
+  </g></g>
+
+  <!-- ============ person (looks at phone) — one mouth, anticipates ============ -->
+  <g transform="translate(250,236)"><g class="hop">
+    <ellipse cx="0" cy="42" rx="30" ry="6" fill="#000" opacity=".26"/>
+    <path d="M-18 40 Q-20 8 0 8 Q20 8 18 40 Z" fill="#38505f"/>
+    <circle cx="0" cy="-8" r="15" fill="#cbd5dc"/>
+    <circle cx="-5" cy="-10" r="2.1" fill="#1b2a33"/><circle cx="5" cy="-10" r="2.1" fill="#1b2a33"/>
+    <path class="mouth" d="M-7 0 Q0 6 7 0" fill="none" stroke="#1b2a33" stroke-width="2" stroke-linecap="round"/>
+  </g></g>
+
+  <!-- ============ thesis — states the breadth, present from the connection beat ============ -->
+  <g class="thesis">
+    <text x="520" y="284" text-anchor="middle" font-size="16" font-weight="700" fill="#e8eef2">One API,
+      <tspan fill="#8798a6" font-weight="400">six languages.</tspan></text>
+  </g>
+</svg>
