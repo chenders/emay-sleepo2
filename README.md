@@ -160,7 +160,7 @@ Reading {
 | Go       | [`go/`](go)      | macOS/Linux/Windows/embedded | TinyGo BLE |
 | Kotlin   | [`kotlin/`](kotlin) | Android 8.0+ | Android BLE |
 
-## CSM
+## About
 
 The EMAY SleepO2 is a $30 continuous pulse oximeter capable of overnight streaming.
 No public documentation existed for its protocol. We reverse-engineered it and
