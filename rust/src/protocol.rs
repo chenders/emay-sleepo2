@@ -63,8 +63,8 @@ pub fn parse_reading(raw: &[u8]) -> Option<Reading> {
     let pulse = if is_sentinel(raw_pr) { None } else { Some(raw_pr) };
     let spo2 = if is_sentinel(raw_spo2) { None } else { Some(raw_spo2) };
 
-    if let Some(p) = pulse { if p < PULSE_MIN_BPM || p > PULSE_MAX_BPM { return None; } }
-    if let Some(s) = spo2 { if s < SPO2_MIN_PCT || s > SPO2_MAX_PCT { return None; } }
+    if let Some(p) = pulse && !(PULSE_MIN_BPM..=PULSE_MAX_BPM).contains(&p) { return None; }
+    if let Some(s) = spo2 && s > SPO2_MAX_PCT { return None; }
 
     Some(Reading::new(spo2, pulse))
 }
