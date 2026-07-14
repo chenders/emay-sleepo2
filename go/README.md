@@ -79,7 +79,7 @@ The EMAY app exports session CSVs. The parser needs no BLE adapter:
 ```go
 result, err := emay.ParseCSVFile("session.csv", true)
 if err != nil {
-    log.Fatal(err)
+    panic(err)
 }
 fmt.Println(len(result.Readings), result.Warnings)
 ```

@@ -26,7 +26,8 @@ dependencies: [
 Two library products are available:
 
 - `EMAYSleepO2` — BLE client (CoreBluetooth), protocol layer, downsampler
-- `EMAYSleepO2CSV` — CSV parser (no Bluetooth dependency)
+- `EMAYSleepO2CSV` — CSV parser (links the core module for shared types,
+  but needs no BLE hardware or active session)
 
 Supports iOS 15+, macOS 13+, and watchOS 9+. Apps that stream over BLE
 must include `NSBluetoothAlwaysUsageDescription` in their Info.plist.
@@ -38,7 +39,9 @@ import EMAYSleepO2
 
 let emay = EMAYClient()
 emay.onReading = { reading in
-    print("SpO₂: \(reading.spo2 ?? 0)%  HR: \(reading.pulse ?? 0)")
+    let spo2 = reading.spo2.map { "\($0)%" } ?? "—"
+    let pulse = reading.pulse.map(String.init) ?? "—"
+    print("SpO₂: \(spo2)  HR: \(pulse)")
 }
 emay.start()
 
@@ -67,8 +70,8 @@ couldn't acquire that measurement (finger off), **not** zero.
 
 ## CSV Parsing (no BLE required)
 
-The EMAY app exports session CSVs. Parse them with the standalone
-`EMAYSleepO2CSV` product:
+The EMAY app exports session CSVs. Parse them with the `EMAYSleepO2CSV`
+product — no BLE hardware or active session required:
 
 ```swift
 import EMAYSleepO2CSV
