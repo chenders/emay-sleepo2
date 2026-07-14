@@ -4,7 +4,7 @@ version = "1.0.0"
 edition = "2024"
 description = "BLE client and CSV parser for the EMAY SleepO2 pulse oximeter"
 license = "MIT"
-repository = "https://github.com/anxietywatch/emay-sleepo2"
+repository = "https://github.com/chenders/emay-sleepo2"
 keywords = ["emay", "sleepo2", "pulse-oximeter", "spo2", "ble", "bluetooth", "health"]
 categories = ["hardware-support", "science", "api-bindings"]
 

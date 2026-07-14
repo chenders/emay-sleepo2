@@ -5,7 +5,7 @@ plugins {
     id("signing")
 }
 
-group = "com.anxietywatch"
+group = "io.github.chenders"
 version = "1.0.0"
 
 android {
@@ -43,7 +43,7 @@ dependencies {
 publishing {
     publications {
         create<MavenPublication>("release") {
-            groupId = "com.anxietywatch"
+            groupId = "io.github.chenders"
             artifactId = "emay-sleepo2"
             version = project.version.toString()
 
@@ -54,7 +54,7 @@ publishing {
             pom {
                 name.set("EMAY SleepO2 BLE SDK")
                 description.set("Android BLE client and CSV parser for the EMAY SleepO2 pulse oximeter")
-                url.set("https://github.com/anxietywatch/emay-sleepo2")
+                url.set("https://github.com/chenders/emay-sleepo2")
                 licenses {
                     license {
                         name.set("MIT")
@@ -67,9 +67,9 @@ publishing {
                     }
                 }
                 scm {
-                    connection.set("scm:git:git://github.com/anxietywatch/emay-sleepo2.git")
-                    developerConnection.set("scm:git:ssh://github.com/anxietywatch/emay-sleepo2.git")
-                    url.set("https://github.com/anxietywatch/emay-sleepo2")
+                    connection.set("scm:git:git://github.com/chenders/emay-sleepo2.git")
+                    developerConnection.set("scm:git:ssh://github.com/chenders/emay-sleepo2.git")
+                    url.set("https://github.com/chenders/emay-sleepo2")
                 }
             }
         }

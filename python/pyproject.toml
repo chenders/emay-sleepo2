@@ -38,10 +38,10 @@ dev = ["pytest", "ruff"]
 all = ["bleak>=0.22", "pytest", "ruff"]
 
 [project.urls]
-Homepage = "https://github.com/anxietywatch/emay-sleepo2"
-Repository = "https://github.com/anxietywatch/emay-sleepo2"
-Issues = "https://github.com/anxietywatch/emay-sleepo2/issues"
-Specification = "https://github.com/anxietywatch/emay-sleepo2/blob/main/spec.md"
+Homepage = "https://github.com/chenders/emay-sleepo2"
+Repository = "https://github.com/chenders/emay-sleepo2"
+Issues = "https://github.com/chenders/emay-sleepo2/issues"
+Specification = "https://github.com/chenders/emay-sleepo2/blob/main/spec.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]
