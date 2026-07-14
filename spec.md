@@ -17,9 +17,9 @@
 
 | Role                | UUID   | Type                  |
 |---------------------|--------|-----------------------|
-| Primary service     | `FF12` | —                     |
-| Write characteristic | `FF01` | Write with response   |
-| Notify characteristic| `FF02` | Notifications         |
+| Primary service     | `FF12` (full: `0000FF12-0000-1000-8000-00805F9B34FB`) | —                     |
+| Write characteristic | `FF01` (full: `0000FF01-0000-1000-8000-00805F9B34FB`) | Write with response   |
+| Notify characteristic| `FF02` (full: `0000FF02-0000-1000-8000-00805F9B34FB`) | Notifications         |
 
 All writes use **write-with-response**. Commands are serialized — do not issue
 the next command until the write completion callback fires.

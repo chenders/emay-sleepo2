@@ -15,36 +15,69 @@ type CSVResult struct {
 }
 
 // DSTFoldCorrector restores physical time across DST fall-back transitions.
+//
+// On the night clocks fall back, the 1:00–2:00 AM hour repeats — producing
+// duplicate wall-clock timestamps. Without correction, the repeated hour's
+// samples collide in deduplication and an hour of real data silently vanishes.
+//
+// Algorithm: When a backward jump of 5–7200 seconds is detected, cross-check
+// whether the local timezone actually transitioned. If yes, add 3600 seconds
+// of correction. A backward jump with NO nearby DST transition (device-clock
+// resync or manual time change) is left untouched.
 type DSTFoldCorrector struct {
-	offset   float64
-	previous *float64
+	offset   time.Duration
+	previous time.Time
+	hasPrev  bool
+	loc      *time.Location
 }
 
 func NewDSTFoldCorrector() *DSTFoldCorrector {
-	return &DSTFoldCorrector{}
+	return &DSTFoldCorrector{loc: time.Local}
 }
 
 func (c *DSTFoldCorrector) Corrected(parsed time.Time) time.Time {
-	secs := float64(parsed.Unix())
-	if c.previous == nil {
-		c.previous = &secs
+	if !c.hasPrev {
+		c.previous = parsed
+		c.hasPrev = true
 		return parsed
 	}
 
-	if c.offset > 0 && secs >= *c.previous {
+	// Once the naive parse catches back up to the corrected timeline,
+	// wall clock has passed the ambiguous hour — stop compensating.
+	if c.offset > 0 && !parsed.Before(c.previous) {
 		c.offset = 0
 	}
 
-	candidate := secs + c.offset
-	delta := candidate - *c.previous
+	candidate := parsed.Add(c.offset)
+	delta := candidate.Sub(c.previous).Seconds()
 
-	if delta < -5 && delta >= -7200 {
-		c.offset += 3600
-		candidate = secs + c.offset
+	if delta < -5 && delta >= -7200 && c.locFellBack(parsed) {
+		c.offset += 3600 * time.Second
+		candidate = parsed.Add(c.offset)
 	}
 
-	c.previous = &candidate
-	return time.Unix(int64(candidate), 0)
+	c.previous = candidate
+	return candidate
+}
+
+// locFellBack returns true if the local timezone actually transitioned
+// clocks back within ±2h of instant. A device-clock resync or manually
+// adjusted time regresses the wall clock with no transition anywhere
+// near — left untouched.
+func (c *DSTFoldCorrector) locFellBack(instant time.Time) bool {
+	searchStart := instant.Add(-2 * time.Hour)
+	searchEnd := instant.Add(2 * time.Hour)
+	cur := searchStart
+	for !cur.After(searchEnd) {
+		_, after := cur.Zone()
+		_, afterNext := cur.Add(1*time.Second).Zone()
+		// Transition occurred if the offset changed
+		if after != afterNext {
+			return afterNext < after
+		}
+		cur = cur.Add(1 * time.Minute)
+	}
+	return false
 }
 
 // ParseCSV parses EMAY CSV content.

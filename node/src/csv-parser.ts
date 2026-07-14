@@ -1,6 +1,7 @@
 /**
  * CSV parser for EMAY SleepO2 export files.
  */
+import * as fs from "node:fs";
 import { Reading, CSVResult } from "./types.js";
 
 /**
@@ -46,8 +47,11 @@ export class DSTFoldCorrector {
   }
 
   private clocksFellBack(instant: Date): boolean {
-    // Heuristic: if instant is in DST, check if subtracting 1 hour
-    // would land in standard time.
+    // Heuristic: compare Jan vs Jul UTC offsets. Works for Northern
+    // Hemisphere DST. Southern Hemisphere observers (Australia, Chile,
+    // Argentina, South Africa, etc.) have the pattern inverted — a
+    // false negative here leaves the fold uncorrected rather than
+    // corrupting data, so this is safe but incomplete.
     const janOffset = new Date(instant.getFullYear(), 0, 1).getTimezoneOffset();
     const julOffset = new Date(instant.getFullYear(), 6, 1).getTimezoneOffset();
     const standardOffset = Math.max(janOffset, julOffset);
@@ -77,7 +81,24 @@ export function parseCSV(content: string, timezoneOffset?: number,
     }
 
     const dateStr = `${fields[0]} ${fields[1]}`;
-    const parsed = new Date(dateStr);
+    // Manual parse: M/d/yyyy h:mm:ss a — avoid new Date() ambiguity
+    const parts = dateStr.match(/(\d+)\/(\d+)\/(\d+)\s+(\d+):(\d+):(\d+)\s+(AM|PM)/i);
+    if (!parts) {
+      warnings.push(`Row ${rowNum}: skipping — invalid date/time '${dateStr}'`);
+      continue;
+    }
+    let [, month, day, year, hour, min, sec, ampm] = parts;
+    let h = parseInt(hour);
+    if (ampm.toUpperCase() === "PM" && h !== 12) h += 12;
+    if (ampm.toUpperCase() === "AM" && h === 12) h = 0;
+    const parsed = new Date(
+      parseInt(year),
+      parseInt(month) - 1,
+      parseInt(day),
+      h,
+      parseInt(min),
+      parseInt(sec)
+    );
     if (isNaN(parsed.getTime())) {
       warnings.push(`Row ${rowNum}: skipping — invalid date/time '${dateStr}'`);
       continue;
@@ -96,7 +117,6 @@ export function parseCSV(content: string, timezoneOffset?: number,
 /** Parse an EMAY CSV file from disk (Node.js only). */
 export function parseCSVFile(path: string, timezoneOffset?: number,
                               correctDSTFold: boolean = true): CSVResult {
-  const fs = require("fs");
   const content = fs.readFileSync(path, "utf-8");
   return parseCSV(content, timezoneOffset, correctDSTFold);
 }

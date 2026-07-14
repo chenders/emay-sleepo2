@@ -5,11 +5,36 @@ on:
     tags: ["v*"]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
+  # ---- Validate tag matches version -------
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check tag matches package version
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          # Extract semver from tag (v1.2.3 -> 1.2.3)
+          TAG_VER="${TAG#v}"
+          # Check Python version
+          PY_VER=$(grep '^version = ' python/pyproject.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          if [ "$TAG_VER" != "$PY_VER" ]; then
+            echo "ERROR: Tag $TAG but pyproject.toml version is $PY_VER"
+            exit 1
+          fi
+          # Check Node version
+          NODE_VER=$(node -e "console.log(require('./node/package.json').version)")
+          if [ "$TAG_VER" != "$NODE_VER" ]; then
+            echo "ERROR: Tag $TAG but package.json version is $NODE_VER"
+            exit 1
+          fi
+          echo "Version $TAG_VER validated across all packages"
+
   # ---- Python → PyPI (API token) ----
   pypi-publish:
+    needs: validate
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -29,6 +54,7 @@ jobs:
 
   # ---- Node.js → npm ----
   npm-publish:
+    needs: validate
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -47,6 +73,18 @@ jobs:
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_KEY }}
+
+  # ---- GitHub Release ----
+  github-release:
+    needs: [validate, pypi-publish, npm-publish]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   # ---- Rust → crates.io (disabled — no account yet) ----
   # crates-publish:
