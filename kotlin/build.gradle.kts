@@ -5,11 +5,11 @@ plugins {
     id("signing")
 }
 
-group = "io.github.chenders"
+group = "com.groundeffectsoftware.com"
 version = "1.0.0"
 
 android {
-    namespace = "com.anxietywatch.emaysleepo2"
+    namespace = "com.groundeffectsoftware.com.emaysleepo2"
     compileSdk = 35
 
     defaultConfig {
@@ -43,7 +43,7 @@ dependencies {
 publishing {
     publications {
         create<MavenPublication>("release") {
-            groupId = "io.github.chenders"
+            groupId = "com.groundeffectsoftware.com"
             artifactId = "emay-sleepo2"
             version = project.version.toString()
 
