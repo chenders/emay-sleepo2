@@ -269,11 +269,11 @@ extension EMAYClient: CBCentralManagerDelegate {
     ) {
         let restored = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral] ?? []
         guard !restored.isEmpty else { return }
+        let peripheral = restored[0]
         Task { @MainActor [weak self] in
             guard let self, self.peripheral == nil else { return }
-            let p = restored[0]
-            p.delegate = self
-            self.peripheral = p
+            peripheral.delegate = self
+            self.peripheral = peripheral
             self.wantScan = true
             self.status = .scanning
         }
