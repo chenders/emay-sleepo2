@@ -4,9 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "emay-sleepo2"
-version = "1.0.1"
+version = "1.0.2"
 description = "BLE client and CSV parser for the EMAY SleepO2 pulse oximeter"
-readme = { file = "../../README.md", content-type = "text/markdown" }
+readme = { file = "README.md", content-type = "text/markdown" }
 license = { text = "MIT" }
 authors = [{ name = "Ground Effect Software, LLC" }]
 keywords = [
