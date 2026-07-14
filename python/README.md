@@ -72,9 +72,11 @@ readings, warnings = parse_csv_file("session.csv")
 ```
 
 `parse_csv(content, timezone=None, correct_dst_fold=True)` accepts raw CSV
-text; both return `(readings, warnings)` where malformed rows become
-warnings, not errors. DST fold correction disambiguates timestamps recorded
-during the repeated fall-back hour.
+text; both return `(readings, warnings)`. Malformed rows become warnings —
+`ValueError` is raised only when the CSV has no data rows, and
+`parse_csv_file` can also raise `OSError` for unreadable files. DST fold
+correction disambiguates timestamps recorded during the repeated fall-back
+hour.
 
 ## Protocol Layer
 

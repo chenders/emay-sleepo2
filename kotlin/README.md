@@ -37,6 +37,8 @@ below) — the library declares none itself, so request them in your app.
 ## Quick Start
 
 ```kotlin
+import com.groundeffectsoftware.com.emaysleepo2.EMAYClient
+
 val emay = EMAYClient(context)
 emay.onReading = { reading ->
     val spo2 = reading.spo2?.let { "$it%" } ?: "—"
@@ -68,17 +70,21 @@ sensor couldn't acquire that measurement (finger off), **not** zero.
 
 ## CSV Parsing (no BLE required)
 
-The EMAY app exports session CSVs. The parser has no Bluetooth dependency:
+The EMAY app exports session CSVs. Parsing needs no BLE hardware or
+permissions:
 
 ```kotlin
+import com.groundeffectsoftware.com.emaysleepo2.parseCSVFile
+
 val result = parseCSVFile("/path/to/session.csv")
 println("${result.readings.size} readings, ${result.warnings.size} warnings")
 ```
 
 `parseCSV(content, timeZone, correctDST)` accepts raw CSV text; both return
-a `CSVResult` where malformed rows become warnings, not errors. DST fold
-correction disambiguates timestamps recorded during the repeated fall-back
-hour.
+a `CSVResult`. Malformed rows become warnings — parsing throws only when
+the CSV has no data rows, and `parseCSVFile` also throws when the file
+can't be read. DST fold correction disambiguates timestamps recorded
+during the repeated fall-back hour.
 
 ## Protocol Layer
 

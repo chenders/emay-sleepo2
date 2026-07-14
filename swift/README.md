@@ -80,7 +80,9 @@ let result = try EMAYCSVParser.parseFile(at: url)
 print(result.readings.count, result.warnings)
 ```
 
-Malformed rows become warnings, not errors. `EMAYCSVParser.timezone` and
+Malformed rows become warnings — `EMAYCSVParser.Error` is thrown only for
+CSVs with no data rows, and `parseFile(at:)` can also throw file-read
+errors. `EMAYCSVParser.timezone` and
 `EMAYCSVParser.correctDSTFold` control timestamp interpretation — DST fold
 correction disambiguates timestamps recorded during the repeated fall-back
 hour.

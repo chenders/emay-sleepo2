@@ -68,9 +68,10 @@ const { readings, warnings } = parseCSVFile("session.csv");
 ```
 
 `parseCSV(content, timezoneOffset?, correctDSTFold = true)` accepts raw CSV
-text; both return a `CSVResult` where malformed rows become warnings, not
-errors. DST fold correction disambiguates timestamps recorded during the
-repeated fall-back hour.
+text; both return a `CSVResult`. Malformed rows become warnings — the
+parsers throw only when the CSV has no data rows, and `parseCSVFile` also
+throws when the file can't be read. DST fold correction disambiguates
+timestamps recorded during the repeated fall-back hour.
 
 ## Protocol Layer
 

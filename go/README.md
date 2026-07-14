@@ -88,9 +88,10 @@ if err != nil {
 fmt.Println(len(result.Readings), result.Warnings)
 ```
 
-`ParseCSV(content, correctDST)` accepts raw CSV text; malformed rows become
-warnings, not errors. DST fold correction disambiguates timestamps recorded
-during the repeated fall-back hour.
+`ParseCSV(content, correctDST)` accepts raw CSV text. Malformed rows become
+warnings — an error is returned only when the CSV has no data rows, or by
+`ParseCSVFile` when the file can't be read. DST fold correction
+disambiguates timestamps recorded during the repeated fall-back hour.
 
 ## Development
 
