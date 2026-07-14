@@ -1,7 +1,7 @@
 /**
  * CSV parser for EMAY SleepO2 export files.
  */
-import { Reading, CSVResult } from "./types";
+import { Reading, CSVResult } from "./types.js";
 
 /**
  * DST fall-back fold corrector.

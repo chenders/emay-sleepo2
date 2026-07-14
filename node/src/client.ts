@@ -5,13 +5,13 @@
 import { EventEmitter } from "events";
 import {
   Reading, MinuteSample, Status
-} from "./types";
+} from "./types.js";
 import {
   SERVICE_UUID, WRITE_UUID, NOTIFY_UUID, NAME_PREFIX,
   HEARTBEAT, START_SEQUENCE, STOP_REALTIME,
   parseReading,
-} from "./protocol";
-import { LiveDownsampler } from "./downsampler";
+} from "./protocol.js";
+import { LiveDownsampler } from "./downsampler.js";
 
 // ---- BLE adapter interface (for injecting noble forks) ----
 

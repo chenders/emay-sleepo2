@@ -1,7 +1,7 @@
 /**
  * Per-minute downsampler for the ~1 Hz EMAY stream.
  */
-import { Reading, MinuteSample } from "./types";
+import { Reading, MinuteSample } from "./types.js";
 
 function startOfMinute(d: Date): Date {
   const m = new Date(d);
