@@ -167,27 +167,11 @@ async fn main() -> Result<(), String> {
 <details>
 <summary><strong>Go</strong></summary>
 
-```go
-package main
-
-import (
-    "fmt"
-    "time"
-    emay "github.com/chenders/emay-sleepo2"
-)
-
-func main() {
-    client := emay.NewClient(myAdapter) // your emay.BLEAdapter implementation
-    client.OnReading = func(r emay.Reading) {
-        if r.SpO2 != nil && r.Pulse != nil {
-            fmt.Printf("SpO₂: %d%%  HR: %d\n", *r.SpO2, *r.Pulse)
-        }
-    }
-    client.Start("") // empty address = scan for the device
-    time.Sleep(30 * time.Second)
-    client.Stop()
-}
-```
+Go has no bundled BLE stack — the client is written against a small
+`BLEAdapter` interface that you implement over your platform's BLE library
+of choice (e.g. [TinyGo Bluetooth](https://github.com/tinygo-org/bluetooth)).
+See [`go/README.md`](go/README.md) for the adapter interface, the required
+`replace` directive, and a runnable example.
 
 </details>
 
