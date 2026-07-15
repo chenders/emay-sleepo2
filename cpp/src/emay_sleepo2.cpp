@@ -19,6 +19,7 @@ struct BLEClient::Impl {
     SimpleBLE::BluetoothUUID wr_uuid{WR_UUID}, nfy_uuid{NFY_UUID};
     ReadingCallback on_reading;
     StatusCallback  on_status;
+    FailureReason failure_reason{FailureReason::None};
     std::atomic<bool> running{false};
     std::thread heartbeat_thread;
 
@@ -37,7 +38,10 @@ BLEClient::~BLEClient() { stop(); }
 void BLEClient::setReadingCallback(ReadingCallback cb) { impl_->on_reading = std::move(cb); }
 void BLEClient::setStatusCallback(StatusCallback cb)   { impl_->on_status  = std::move(cb); }
 
+FailureReason BLEClient::failure_reason() const { return impl_->failure_reason; }
+
 bool BLEClient::start() {
+    impl_->failure_reason = FailureReason::None;
     if (!impl_->adapter) return false;
     impl_->emit("scanning");
 
@@ -54,7 +58,14 @@ bool BLEClient::start() {
             break;
         }
     }
-    if (!impl_->peripheral || !impl_->peripheral->is_connected()) {
+    if (!impl_->peripheral) {
+        // Scan finished without discovering a SleepO2.
+        impl_->failure_reason = FailureReason::NotFound;
+        impl_->emit("device not found"); return false;
+    }
+    if (!impl_->peripheral->is_connected()) {
+        // Found the device but the connect attempt did not stick.
+        impl_->failure_reason = FailureReason::ConnectionFailed;
         impl_->emit("device not found"); return false;
     }
 

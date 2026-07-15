@@ -61,6 +61,11 @@ public final class EMAYClient: NSObject, @unchecked Sendable {
         }
     }
 
+    /// Best-effort reason for the most recent ``EMAYStatus/failed(_:)``.
+    /// Meaningful only while `status` is `.failed`; otherwise `.none`. It is
+    /// reset to `.none` at the start of each session.
+    public private(set) var failureReason: FailureReason = .none
+
     /// The most recent validated reading, or nil when no reading is
     /// available (including when the stream is stalled).
     public private(set) var latestReading: EMAYReading?
@@ -105,6 +110,7 @@ public final class EMAYClient: NSObject, @unchecked Sendable {
     /// No-op while a session is already active.
     public func start() {
         guard !status.isActive else { return }
+        failureReason = .none
         wantScan = true
         if let notReady = Self.startupStatus(for: central.state) {
             status = notReady
@@ -117,6 +123,7 @@ public final class EMAYClient: NSObject, @unchecked Sendable {
     /// discovered/remembered peripheral identifier.
     public func start(address uuid: UUID) {
         guard !status.isActive else { return }
+        failureReason = .none
         wantScan = true
         knownPeripheralUUID = uuid
         if central.state == .poweredOn {
@@ -217,6 +224,9 @@ public final class EMAYClient: NSObject, @unchecked Sendable {
     }
 
     private func fail(_ message: String) {
+        // All callers are post-discovery failures: the device was found but the
+        // connection or GATT setup failed.
+        failureReason = .connectionFailed
         status = .failed(message)
         if central.state == .poweredOn, let peripheral {
             central.cancelPeripheralConnection(peripheral)
@@ -358,6 +368,7 @@ extension EMAYClient: CBCentralManagerDelegate {
             if self.wantScan && self.autoReconnect {
                 self.beginMonitoring()
             } else {
+                self.failureReason = .connectionFailed
                 self.status = .failed(msg)
             }
         }

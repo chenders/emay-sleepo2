@@ -12,7 +12,7 @@ use uuid::Uuid;
 
 use crate::downsampler::LiveDownsampler;
 use crate::protocol::*;
-use crate::types::{MinuteSample, Reading, Status};
+use crate::types::{FailureReason, MinuteSample, Reading, Status};
 
 pub type ReadingCallback = Arc<dyn Fn(Reading) + Send + Sync>;
 pub type StatusCallback = Arc<dyn Fn(Status) + Send + Sync>;
@@ -21,6 +21,7 @@ pub type MinuteCallback = Arc<dyn Fn(Vec<MinuteSample>) + Send + Sync>;
 pub struct EMAYClient {
     adapter: Adapter,
     status: Arc<Mutex<Status>>,
+    failure_reason: Arc<Mutex<FailureReason>>,
     #[allow(dead_code)]
     latest_reading: Arc<Mutex<Option<Reading>>>,
 
@@ -57,6 +58,7 @@ impl EMAYClient {
         Ok(Self {
             adapter,
             status: Arc::new(Mutex::new(Status::Idle)),
+            failure_reason: Arc::new(Mutex::new(FailureReason::None)),
             latest_reading: Arc::new(Mutex::new(None)),
             on_reading: Arc::new(Mutex::new(None)),
             on_status: Arc::new(Mutex::new(None)),
@@ -83,6 +85,12 @@ impl EMAYClient {
         self.status.lock().await.clone()
     }
 
+    /// Why the last session failed, or [`FailureReason::None`] if it has not
+    /// failed. See [`FailureReason::message`] for user-facing text.
+    pub async fn failure_reason(&self) -> FailureReason {
+        *self.failure_reason.lock().await
+    }
+
     pub async fn start(&self) -> Result<(), String> {
         let mut status = self.status.lock().await;
         if status.is_active() {
@@ -90,13 +98,14 @@ impl EMAYClient {
         }
         *status = Status::Scanning;
         drop(status);
+        *self.failure_reason.lock().await = FailureReason::None;
         self.scan_and_connect().await
     }
 
     pub async fn stop(&self) -> Result<(), String> {
         self.adapter.stop_scan().await.ok();
 
-        // Quiesce the heartbeat FIRST: set Idle (the loop's stop condition),
+        // Stop the heartbeat FIRST: set Idle (the loop's stop condition),
         // wake it, then join it to completion. Otherwise a heartbeat
         // write-with-response can still be in-flight when we disconnect below;
         // its orphaned response wedges disconnect() forever and the BLE link is
@@ -158,10 +167,10 @@ impl EMAYClient {
     async fn connect_and_stream(&self, peripheral: Peripheral) -> Result<(), String> {
         *self.status.lock().await = Status::Connecting;
 
-        peripheral
-            .connect()
-            .await
-            .map_err(|e| format!("connect: {e}"))?;
+        if let Err(e) = peripheral.connect().await {
+            *self.failure_reason.lock().await = FailureReason::ConnectionFailed;
+            return Err(format!("connect: {e}"));
+        }
 
         peripheral
             .discover_services()
@@ -173,15 +182,15 @@ impl EMAYClient {
 
         let chars = peripheral.characteristics();
 
-        let notify_char = chars
-            .iter()
-            .find(|c| c.uuid == notify_uuid)
-            .ok_or("notify char not found")?;
+        let Some(notify_char) = chars.iter().find(|c| c.uuid == notify_uuid) else {
+            *self.failure_reason.lock().await = FailureReason::ConnectionFailed;
+            return Err("notify char not found".to_string());
+        };
 
-        let write_char = chars
-            .iter()
-            .find(|c| c.uuid == write_uuid)
-            .ok_or("write char not found")?;
+        let Some(write_char) = chars.iter().find(|c| c.uuid == write_uuid) else {
+            *self.failure_reason.lock().await = FailureReason::ConnectionFailed;
+            return Err("write char not found".to_string());
+        };
 
         peripheral
             .subscribe(notify_char)

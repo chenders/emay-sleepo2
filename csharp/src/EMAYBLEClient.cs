@@ -20,8 +20,19 @@ public abstract class EMAYBLEClient : IDisposable
     public event Action<EMAYReading>? OnReading;
     public event Action<string>? OnStatus;
 
+    /// <summary>
+    /// Best-effort reason for the most recent failed session. Reset to
+    /// <see cref="FailureReason.None"/> at the start of a scan and set immediately
+    /// before a failing transition. See <see cref="FailureReasonExtensions.Message"/>
+    /// for user-facing text.
+    /// </summary>
+    public FailureReason FailureReason { get; private set; } = FailureReason.None;
+
     protected void Emit(EMAYReading r) => OnReading?.Invoke(r);
     protected void Emit(string s) => OnStatus?.Invoke(s);
+
+    /// <summary>Record why the session failed; call immediately before signaling failure.</summary>
+    protected void SetFailureReason(FailureReason reason) => FailureReason = reason;
 
     public abstract Task StartAsync(CancellationToken ct = default);
     public abstract Task StopAsync();
@@ -45,7 +56,11 @@ public class EMAYWindowsBLEClient : EMAYBLEClient
 
     public override async Task StartAsync(CancellationToken ct = default)
     {
+        SetFailureReason(FailureReason.None);
         Emit("scanning");
+        // NOTE: this scan awaits a TaskCompletionSource with no timeout, so there is
+        // no not-found site to set FailureReason.NotFound on. A production port would
+        // add a scan timeout and set NotFound before failing here.
         var watcher = new BluetoothLEAdvertisementWatcher
         {
             ScanningMode = BluetoothLEScanningMode.Active
@@ -70,8 +85,20 @@ public class EMAYWindowsBLEClient : EMAYBLEClient
         Emit("connecting");
         var svcResult = await _device.GetGattServiceAsync(EMAYProtocol.SvcUuid);
         var svc = svcResult.Service;
+        if (svc == null)
+        {
+            SetFailureReason(FailureReason.ConnectionFailed);
+            Emit("failed");
+            return;
+        }
         _wr  = (await svc.GetCharacteristicsAsync(EMAYProtocol.WrUuid)).Characteristics.FirstOrDefault();
         _nfy = (await svc.GetCharacteristicsAsync(EMAYProtocol.NfyUuid)).Characteristics.FirstOrDefault();
+        if (_wr == null || _nfy == null)
+        {
+            SetFailureReason(FailureReason.ConnectionFailed);
+            Emit("failed");
+            return;
+        }
 
         await _nfy!.WriteClientCharacteristicConfigurationDescriptorAsync(
             GattClientCharacteristicConfigurationDescriptorValue.Notify);
