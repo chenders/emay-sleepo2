@@ -94,7 +94,7 @@ jobs:
       - name: Test
         run: go test ./...
 
-  # ---- Kotlin (compile-only — Android BLE requires emulator) ----
+  # ---- Kotlin / Android ----
   kotlin-compile:
     runs-on: ubuntu-latest
     defaults:
@@ -106,14 +106,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - name: Compile (syntax check)
-        run: |
-          FILES=$(find src/main -name "*.kt")
-          if [ -z "$FILES" ]; then echo "No Kotlin files found"; exit 1; fi
-          echo "Checking $(echo "$FILES" | wc -l) Kotlin source files for syntax errors..."
-          for f in $FILES; do
-            # Simple syntactic check: verify file is well-formed enough to parse
-            # (Full compilation requires Android SDK; this catches gross errors)
-            grep -q "^package\|^import\|^//\|^@" "$f" || echo "WARNING: $f may have issues"
-          done
-          echo "Syntax check passed"
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Compile
+        run: ./gradlew assembleRelease

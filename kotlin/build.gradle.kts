@@ -5,11 +5,11 @@ plugins {
     id("signing")
 }
 
-group = "com.groundeffectsoftware.com"
+group = "com.groundeffectsoftware"
 version = "1.0.0"
 
 android {
-    namespace = "com.groundeffectsoftware.com.emaysleepo2"
+    namespace = "com.groundeffectsoftware.emaysleepo2"
     compileSdk = 35
 
     defaultConfig {
@@ -22,8 +22,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
     }
 
     publishing {
@@ -43,7 +45,7 @@ dependencies {
 publishing {
     publications {
         create<MavenPublication>("release") {
-            groupId = "com.groundeffectsoftware.com"
+            groupId = "com.groundeffectsoftware"
             artifactId = "emay-sleepo2"
             version = project.version.toString()
 
