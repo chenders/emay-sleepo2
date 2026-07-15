@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 300" width="880" height="300"
      role="img" aria-labelledby="hs-title hs-desc" font-family="ui-monospace, 'SF Mono', Menlo, monospace">
   <title id="hs-title">EMAY SleepO2 BLE SDK — the handshake</title>
-  <desc id="hs-desc">The EMAY SleepO2 oximeter reads SpO2 97 percent, but the phone can't decode the Bluetooth protocol and shows an error. A spec.md card decodes it; the 8-byte frame EB 01 05 3E 61 7F 00 4A streams across a Bluetooth arc, shrinks into the phone screen, and its gold bytes 3E and 61 become the gold-then-settled numbers 62 bpm and 97 percent alongside a live pulse waveform.</desc>
+  <desc id="hs-desc">The EMAY SleepO2 oximeter reads SpO2 97 percent, but the phone can't decode the Bluetooth protocol and shows an error. A SPEC.md card decodes it; the 8-byte frame EB 01 05 3E 61 7F 00 4A streams across a Bluetooth arc, shrinks into the phone screen, and its gold bytes 3E and 61 become the gold-then-settled numbers 62 bpm and 97 percent alongside a live pulse waveform.</desc>
 
   <defs>
     <linearGradient id="hs-bg" x1="0" y1="0" x2="0" y2="1">
@@ -111,10 +111,10 @@
     <path d="M382 130 L398 150 L382 150 L398 170" fill="none" stroke="#ff5c6c" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
   </g>
 
-  <!-- ============ discovery: spec.md card (cyan) ============ -->
+  <!-- ============ discovery: SPEC.md card (cyan) ============ -->
   <g transform="translate(356,30)"><g class="di"><g class="spec">
     <rect x="0" y="0" width="170" height="60" rx="12" fill="#12202b" stroke="#2ee6c8"/>
-    <text x="85" y="26" text-anchor="middle" font-size="15" fill="#7ff0dd" font-weight="700">spec.md</text>
+    <text x="85" y="26" text-anchor="middle" font-size="15" fill="#7ff0dd" font-weight="700">SPEC.md</text>
     <text x="85" y="46" text-anchor="middle" font-size="12" fill="#c9d3db">protocol decoded &#10003;</text>
   </g></g></g>
 

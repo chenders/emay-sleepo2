@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 260" width="780" height="260"
+     role="img" aria-labelledby="ct-title ct-desc" font-family="ui-monospace, 'SF Mono', Menlo, monospace">
+  <title id="ct-title">PacketLogger's two capture modes</title>
+  <desc id="ct-desc">Local capture sniffs only the Mac's own Bluetooth radio and captures nothing useful, since the real traffic happens on the phone's radio. File then New iOS Trace attaches over USB to a connected iPhone and captures that phone's own Bluetooth traffic, which is the mode that actually captured the real EMAY connect-stream-disconnect sequence.</desc>
+  <defs>
+    <linearGradient id="ct-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0c1219"/><stop offset="1" stop-color="#090d12"/>
+    </linearGradient>
+    <style>
+      .echo{animation:ctecho 2.6s ease-out infinite}
+      @keyframes ctecho{0%{stroke-dashoffset:0;opacity:.9}100%{stroke-dashoffset:-40;opacity:.4}}
+      .flow{stroke-dasharray:3 6;animation:ctflow 1.6s linear infinite}
+      @keyframes ctflow{from{stroke-dashoffset:0}to{stroke-dashoffset:-18}}
+      @media (prefers-reduced-motion:reduce){svg *{animation-play-state:paused!important}}
+    </style>
+  </defs>
+
+  <rect width="780" height="260" rx="18" fill="url(#ct-bg)"/>
+  <rect x="1" y="1" width="778" height="258" rx="17" fill="none" stroke="#1a2530" stroke-width="1"/>
+  <line x1="390" y1="24" x2="390" y2="236" stroke="#1a2530" stroke-width="1"/>
+
+  <!-- Scene A: local capture (wrong) -->
+  <text x="195" y="36" text-anchor="middle" font-size="13" fill="#ff8a95" font-weight="700">Local capture (default)</text>
+  <g transform="translate(150,110)">
+    <rect width="90" height="58" rx="8" fill="#161f28" stroke="#2b3a48"/>
+    <rect x="8" y="8" width="74" height="42" rx="4" fill="#0b141a"/>
+    <text x="45" y="34" text-anchor="middle" font-size="10" fill="#8798a6">MacBook</text>
+  </g>
+  <path class="echo" d="M240,120 Q290,90 240,158" fill="none" stroke="#ff5c6c" stroke-width="2" stroke-dasharray="3 6"/>
+  <text x="195" y="200" text-anchor="middle" font-size="11.5" fill="#ff5c6c">hears only its own radio</text>
+  <text x="195" y="218" text-anchor="middle" font-size="11.5" fill="#ff5c6c">— captures nothing useful</text>
+
+  <!-- Scene B: iOS Trace (correct) -->
+  <text x="585" y="36" text-anchor="middle" font-size="13" fill="#7ff0dd" font-weight="700">File → New iOS Trace</text>
+  <g transform="translate(430,110)">
+    <rect width="90" height="58" rx="8" fill="#161f28" stroke="#2b3a48"/>
+    <rect x="8" y="8" width="74" height="42" rx="4" fill="#0b141a"/>
+    <text x="45" y="34" text-anchor="middle" font-size="10" fill="#8798a6">MacBook</text>
+  </g>
+  <line x1="520" y1="139" x2="562" y2="139" stroke="#57d68d" stroke-width="2.5"/>
+  <text x="541" y="130" text-anchor="middle" font-size="9.5" fill="#57d68d">USB</text>
+  <g transform="translate(562,96)">
+    <rect width="46" height="86" rx="10" fill="#12202b" stroke="#2b3a48"/>
+    <rect x="5" y="10" width="36" height="58" rx="4" fill="#0b141a"/>
+    <text x="23" y="94" text-anchor="middle" font-size="9.5" fill="#8798a6">iPhone</text>
+  </g>
+  <path class="flow" d="M608,139 Q650,120 690,139" fill="none" stroke="#2ee6c8" stroke-width="2.5"/>
+  <g transform="translate(690,112)">
+    <rect width="70" height="52" rx="8" fill="#161f28" stroke="#2b3a48"/>
+    <circle cx="35" cy="14" r="3" fill="#57d68d"/>
+    <text x="35" y="34" text-anchor="middle" font-size="9.5" fill="#8798a6">EMAY</text>
+  </g>
+  <text x="585" y="200" text-anchor="middle" font-size="11.5" fill="#57d68d">captures the real conversation —</text>
+  <text x="585" y="218" text-anchor="middle" font-size="11.5" fill="#57d68d">the phone's own radio</text>
+</svg>

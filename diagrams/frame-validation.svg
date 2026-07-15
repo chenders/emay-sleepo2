@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 300" width="700" height="300"
+     role="img" aria-labelledby="fv-title fv-desc" font-family="ui-monospace, 'SF Mono', Menlo, monospace">
+  <title id="fv-title">Sentinel vs. implausible — two different fates for a frame</title>
+  <desc id="fv-desc">A sentinel byte (0x00 or 0xFF) in the pulse or SpO2 position means only that field is absent — the rest of the reading survives. An implausible byte that is not a sentinel (for example 0x7A, 122 percent) rejects the entire frame, not just that field.</desc>
+  <defs>
+    <linearGradient id="fv-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0c1219"/><stop offset="1" stop-color="#090d12"/>
+    </linearGradient>
+    <style>
+      .warn{animation:fvwarn 1.6s ease-in-out infinite}
+      @keyframes fvwarn{0%,100%{opacity:1}50%{opacity:.35}}
+      .crumble{animation:fvcrumble 3.2s ease-in infinite}
+      @keyframes fvcrumble{0%,55%{opacity:1}85%{opacity:.12}100%{opacity:.12}}
+      @media (prefers-reduced-motion:reduce){svg *{animation-play-state:paused!important}}
+    </style>
+  </defs>
+
+  <rect width="700" height="300" rx="18" fill="url(#fv-bg)"/>
+  <rect x="1" y="1" width="698" height="298" rx="17" fill="none" stroke="#1a2530" stroke-width="1"/>
+
+  <!-- top: sentinel case -->
+  <text x="40" y="34" font-size="12" fill="#8798a6">SpO&#8322; byte = <tspan fill="#7ff0dd">0xFF</tspan> (a sentinel)</text>
+  <g transform="translate(40,50)">
+    <rect width="360" height="34" rx="8" fill="#12202b" stroke="#2ee6c8" stroke-width="1.5"/>
+    <text x="12" y="23" font-size="12.5" fill="#7ff0dd">EB 01 05 44 </text>
+    <text x="120" y="23" font-size="12.5" fill="#7ff0dd" font-weight="700">FF</text>
+    <text x="140" y="23" font-size="12.5" fill="#7ff0dd"> 7F 00 33</text>
+  </g>
+  <path d="M420,67 L460,67" stroke="#57d68d" stroke-width="2"/>
+  <g transform="translate(468,44)">
+    <rect width="190" height="46" rx="8" fill="#0e1b24" stroke="#57d68d" stroke-width="2"/>
+    <text x="95" y="20" text-anchor="middle" font-size="11.5" fill="#57d68d" font-weight="700">Reading survives</text>
+    <text x="95" y="36" text-anchor="middle" font-size="10.5" fill="#8798a6">pulse = 68, SpO&#8322; = nil</text>
+  </g>
+
+  <line x1="40" y1="120" x2="660" y2="120" stroke="#1a2530"/>
+
+  <!-- bottom: implausible case -->
+  <text x="40" y="152" font-size="12" fill="#8798a6">SpO&#8322; byte = <tspan fill="#ff8a95">0x7A = 122%</tspan> — not a sentinel, out of 0-100% range</text>
+  <g transform="translate(40,168)" class="crumble">
+    <rect width="360" height="34" rx="8" fill="#12202b" stroke="#ff5c6c" stroke-width="1.5"/>
+    <text x="12" y="23" font-size="12.5" fill="#c9d3db">EB 01 05 44 </text>
+    <text x="120" y="23" font-size="12.5" fill="#ff5c6c" font-weight="700" class="warn">7A</text>
+    <text x="140" y="23" font-size="12.5" fill="#c9d3db"> 7F 00 2E</text>
+  </g>
+  <path d="M420,185 L460,185" stroke="#ff5c6c" stroke-width="2"/>
+  <g transform="translate(468,162)">
+    <rect width="190" height="46" rx="8" fill="#2a0f13" stroke="#ff5c6c" stroke-width="2"/>
+    <text x="95" y="20" text-anchor="middle" font-size="11.5" fill="#ff8a95" font-weight="700">whole frame rejected</text>
+    <text x="95" y="36" text-anchor="middle" font-size="10.5" fill="#ff8a95">not just the SpO&#8322; field</text>
+  </g>
+
+  <text x="350" y="248" text-anchor="middle" font-size="12" fill="#e8eef2" font-weight="700">One out-of-range byte that isn't a sentinel costs the entire reading —</text>
+  <text x="350" y="266" text-anchor="middle" font-size="12" fill="#e8eef2" font-weight="700">a valid pulse in the same frame is discarded too.</text>
+</svg>

@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" width="720" height="340"
+     role="img" aria-labelledby="hh-title hh-desc" font-family="ui-monospace, 'SF Mono', Menlo, monospace">
+  <title id="hh-title">Handshake, then sustained streaming</title>
+  <desc id="hh-desc">Four commands in order — hello, deviceState, startRealtime, getBattery — each only ATT-acknowledged with no reply payload. Once started, the device streams an 8-byte data frame to the client roughly once a second while the client sends a heartbeat back at least every two seconds, using 1.5 seconds in practice.</desc>
+  <defs>
+    <linearGradient id="hh-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0c1219"/><stop offset="1" stop-color="#090d12"/>
+    </linearGradient>
+    <style>
+      .ring{transform-box:fill-box;transform-origin:center;animation:hhring 1.8s ease-out infinite}
+      .ring.b{animation-delay:.9s}
+      @keyframes hhring{0%{transform:scale(.3);opacity:.7}100%{transform:scale(1.6);opacity:0}}
+
+      .frame{transform-box:fill-box;transform-origin:center;animation:hhframe 1.1s linear infinite}
+      @keyframes hhframe{
+        0%{transform:translateX(0);opacity:0}
+        6%{opacity:1}
+        92%{opacity:1}
+        100%{transform:translateX(-330px);opacity:0}
+      }
+      .beat{transform-box:fill-box;transform-origin:center;animation:hhbeat 1.5s linear infinite}
+      @keyframes hhbeat{
+        0%{transform:translateX(0);opacity:0}
+        6%{opacity:1}
+        92%{opacity:1}
+        100%{transform:translateX(330px);opacity:0}
+      }
+      .beatdot{transform-box:fill-box;transform-origin:center;animation:hhbeatdot 1.5s ease-out infinite}
+      @keyframes hhbeatdot{0%,70%{transform:scale(1)}80%{transform:scale(1.6)}100%{transform:scale(1)}}
+      @media (prefers-reduced-motion:reduce){svg *{animation-play-state:paused!important}}
+    </style>
+  </defs>
+
+  <rect width="720" height="340" rx="18" fill="url(#hh-bg)"/>
+  <rect x="1" y="1" width="718" height="338" rx="17" fill="none" stroke="#1a2530" stroke-width="1"/>
+
+  <text x="360" y="26" text-anchor="middle" font-size="12" fill="#8798a6">1 · handshake (serialized, ATT-ack only — no reply payload)</text>
+
+  <!-- 4 handshake chips, static, numbered -->
+  <g font-size="11" text-anchor="middle">
+    <g transform="translate(70,40)">
+      <rect width="130" height="34" rx="8" fill="#12202b" stroke="#2ee6c8" stroke-width="1.5"/>
+      <text x="65" y="22" fill="#7ff0dd">① hello</text>
+    </g>
+    <g transform="translate(212,40)">
+      <rect width="130" height="34" rx="8" fill="#12202b" stroke="#2ee6c8" stroke-width="1.5"/>
+      <text x="65" y="22" fill="#7ff0dd">② deviceState</text>
+    </g>
+    <g transform="translate(354,40)">
+      <rect width="130" height="34" rx="8" fill="#12202b" stroke="#2ee6c8" stroke-width="1.5"/>
+      <text x="65" y="22" fill="#7ff0dd">③ startRealtime</text>
+    </g>
+    <g transform="translate(496,40)">
+      <rect width="130" height="34" rx="8" fill="#12202b" stroke="#2ee6c8" stroke-width="1.5"/>
+      <text x="65" y="22" fill="#7ff0dd">④ getBattery</text>
+    </g>
+  </g>
+
+  <text x="360" y="108" text-anchor="middle" font-size="12" fill="#8798a6">2 · sustained streaming (repeats until stop)</text>
+
+  <!-- phone (left) -->
+  <g transform="translate(40,140)">
+    <rect width="110" height="150" rx="18" fill="#12202b" stroke="#2b3a48"/>
+    <rect x="10" y="14" width="90" height="122" rx="8" fill="#0b141a"/>
+    <text x="55" y="60" text-anchor="middle" font-size="16" fill="#57d68d" font-weight="700">97%</text>
+    <text x="55" y="78" text-anchor="middle" font-size="9.5" fill="#8798a6">SpO&#8322;</text>
+    <text x="55" y="100" text-anchor="middle" font-size="11" fill="#c9d3db">62 bpm</text>
+  </g>
+
+  <!-- device (right) -->
+  <g transform="translate(550,155)">
+    <rect width="130" height="82" rx="14" fill="#161f28" stroke="#2b3a48"/>
+    <rect x="12" y="14" width="106" height="36" rx="6" fill="#0b141a"/>
+    <text x="65" y="37" text-anchor="middle" font-size="12" fill="#57d68d" font-weight="700">EMAY SleepO2</text>
+    <circle cx="112" cy="18" r="3" fill="#57d68d"/>
+  </g>
+
+  <!-- connection arc -->
+  <path d="M150,196 Q360,150 550,196" fill="none" stroke="#2ee6c8" stroke-width="1.5" stroke-dasharray="3 7" opacity=".55"/>
+
+  <!-- data frame chip: device -> phone, ~1Hz -->
+  <g transform="translate(480,182)"><g class="frame">
+    <rect width="86" height="26" rx="7" fill="#0e1b24" stroke="#2ee6c8"/>
+    <text x="43" y="17" text-anchor="middle" font-size="9.5" fill="#7ff0dd">EB…44 5E…12</text>
+  </g></g>
+  <text x="565" y="252" text-anchor="middle" font-size="10" fill="#7ff0dd">data frame ~1 Hz</text>
+
+  <!-- heartbeat: phone -> device, every <=2s (1.5s used) -->
+  <g transform="translate(150,238)"><g class="beat">
+    <circle class="beatdot" r="4" fill="#57d68d"/>
+    <path d="M8,0 h5 l2,-8 l2,13 l2,-5 h5" fill="none" stroke="#57d68d" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  </g></g>
+  <text x="155" y="270" text-anchor="middle" font-size="10" fill="#57d68d">heartbeat &#8804; 2s</text>
+  <text x="155" y="284" text-anchor="middle" font-size="9" fill="#8798a6">(1.5s in practice)</text>
+
+  <text x="360" y="320" text-anchor="middle" font-size="10.5" fill="#8798a6">no heartbeat for ~3-4s &#8594; device stops streaming (no need to redo the handshake, just resume the heartbeat)</text>
+</svg>

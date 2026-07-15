@@ -138,8 +138,6 @@ class EMAYClient:
         device = await BleakScanner.find_device_by_filter(_filter, timeout=10)
         if device is None:
             self.status = Status.FAILED
-            if self.on_status_change:
-                self.on_status_change(Status.FAILED)
             return
         self._known_address = device.address
         await self._connect_to(device)
@@ -155,8 +153,6 @@ class EMAYClient:
             await client.connect()
         except Exception as e:
             self.status = Status.FAILED
-            if self.on_status_change:
-                self.on_status_change(Status.FAILED)
             logger.error(f"EMAY: connect failed: {e}")
             return
         self._client = client

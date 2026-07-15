@@ -1,14 +1,14 @@
 # EMAY SleepO2 BLE SDK — Go
 
-> Go BLE client and CSV parser for the EMAY SleepO2 pulse oximeter's
-> real-time Bluetooth streaming protocol. Read SpO₂ and pulse rate at 1 Hz
-> from a $30 consumer device.
+> Go BLE client for the EMAY SleepO2 pulse oximeter's real-time Bluetooth
+> streaming protocol. Read SpO₂ and pulse rate at 1 Hz from a $30 consumer
+> device.
 
 This is the Go package of the multi-language EMAY SleepO2 SDK. For the
 other bindings (Swift, Python, Node.js, Rust, Kotlin) see the
 [repository README](https://github.com/chenders/emay-sleepo2#readme). The
 reverse-engineered protocol is documented in
-[spec.md](https://github.com/chenders/emay-sleepo2/blob/main/spec.md).
+[SPEC.md](https://github.com/chenders/emay-sleepo2/blob/main/SPEC.md).
 
 ## Installation
 
@@ -75,23 +75,6 @@ and keeps the stream alive with a heartbeat command. Useful surface:
 
 `Reading.SpO2` and `Reading.Pulse` are `*int`: `nil` means the sensor
 couldn't acquire that measurement (finger off), **not** zero.
-
-## CSV Parsing (no BLE required)
-
-The EMAY app exports session CSVs. The parser needs no BLE adapter:
-
-```go
-result, err := emay.ParseCSVFile("session.csv", true)
-if err != nil {
-    panic(err)
-}
-fmt.Println(len(result.Readings), result.Warnings)
-```
-
-`ParseCSV(content, correctDST)` accepts raw CSV text. Malformed rows become
-warnings — an error is returned only when the CSV has no data rows, or by
-`ParseCSVFile` when the file can't be read. DST fold correction
-disambiguates timestamps recorded during the repeated fall-back hour.
 
 ## Development
 

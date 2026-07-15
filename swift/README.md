@@ -1,14 +1,14 @@
 # EMAY SleepO2 BLE SDK — Swift
 
-> Swift BLE client and CSV parser for the EMAY SleepO2 pulse oximeter's
-> real-time Bluetooth streaming protocol. Read SpO₂ and pulse rate at 1 Hz
-> from a $30 consumer device.
+> Swift BLE client for the EMAY SleepO2 pulse oximeter's real-time
+> Bluetooth streaming protocol. Read SpO₂ and pulse rate at 1 Hz from a
+> $30 consumer device.
 
 This is the Swift package of the multi-language EMAY SleepO2 SDK. For the
 other bindings (Python, Node.js, Rust, Go, Kotlin) see the
 [repository README](https://github.com/chenders/emay-sleepo2#readme). The
 reverse-engineered protocol is documented in
-[spec.md](https://github.com/chenders/emay-sleepo2/blob/main/spec.md).
+[SPEC.md](https://github.com/chenders/emay-sleepo2/blob/main/SPEC.md).
 
 ## Installation
 
@@ -23,11 +23,8 @@ dependencies: [
 ]
 ```
 
-Two library products are available:
-
-- `EMAYSleepO2` — BLE client (CoreBluetooth), protocol layer, downsampler
-- `EMAYSleepO2CSV` — CSV parser (links the core module for shared types,
-  but needs no BLE hardware or active session)
+The `EMAYSleepO2` library product provides the BLE client (CoreBluetooth),
+protocol layer, and downsampler.
 
 Supports iOS 15+, macOS 13+, and watchOS 9+. Apps that stream over BLE
 must include `NSBluetoothAlwaysUsageDescription` in their Info.plist.
@@ -68,25 +65,6 @@ surface:
 
 `reading.spo2` and `reading.pulse` are optionals: `nil` means the sensor
 couldn't acquire that measurement (finger off), **not** zero.
-
-## CSV Parsing (no BLE required)
-
-The EMAY app exports session CSVs. Parse them with the `EMAYSleepO2CSV`
-product — no BLE hardware or active session required:
-
-```swift
-import EMAYSleepO2CSV
-
-let result = try EMAYCSVParser.parseFile(at: url)
-print(result.readings.count, result.warnings)
-```
-
-Malformed rows become warnings — `EMAYCSVParser.Error` is thrown only for
-CSVs with no data rows, and `parseFile(at:)` can also throw file-read
-errors. `EMAYCSVParser.timezone` and
-`EMAYCSVParser.correctDSTFold` control timestamp interpretation — DST fold
-correction disambiguates timestamps recorded during the repeated fall-back
-hour.
 
 ## Development
 

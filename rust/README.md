@@ -1,14 +1,14 @@
 # EMAY SleepO2 BLE SDK — Rust
 
-> Rust BLE client and CSV parser for the EMAY SleepO2 pulse oximeter's
-> real-time Bluetooth streaming protocol. Read SpO₂ and pulse rate at 1 Hz
-> from a $30 consumer device.
+> Rust BLE client for the EMAY SleepO2 pulse oximeter's real-time
+> Bluetooth streaming protocol. Read SpO₂ and pulse rate at 1 Hz from a
+> $30 consumer device.
 
 This is the Rust crate of the multi-language EMAY SleepO2 SDK. For the
 other bindings (Swift, Python, Node.js, Go, Kotlin) see the
 [repository README](https://github.com/chenders/emay-sleepo2#readme). The
 reverse-engineered protocol is documented in
-[spec.md](https://github.com/chenders/emay-sleepo2/blob/main/spec.md).
+[SPEC.md](https://github.com/chenders/emay-sleepo2/blob/main/SPEC.md).
 
 ## Installation
 
@@ -62,23 +62,6 @@ surface:
 
 `Reading::spo2` and `Reading::pulse` are `Option<u8>`: `None` means the
 sensor couldn't acquire that measurement (finger off), **not** zero.
-
-## CSV Parsing (no BLE required)
-
-The EMAY app exports session CSVs. Parsing needs no BLE hardware or
-connection:
-
-```rust
-use emay_sleepo2::parse_csv_file;
-
-let (readings, warnings) = parse_csv_file("session.csv", true)?;
-```
-
-`parse_csv(content, correct_dst_fold)` accepts raw CSV text; both return
-`Result<(Vec<Reading>, Vec<String>), String>`. Malformed rows become
-warnings rather than errors — `Err` is reserved for unreadable files and
-CSVs with no data rows. DST fold correction disambiguates timestamps
-recorded during the repeated fall-back hour.
 
 ## Protocol Layer
 

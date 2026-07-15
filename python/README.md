@@ -1,19 +1,19 @@
 # EMAY SleepO2 BLE SDK — Python
 
-> Python BLE client and CSV parser for the EMAY SleepO2 pulse oximeter's
-> real-time Bluetooth streaming protocol. Read SpO₂ and pulse rate at 1 Hz
-> from a $30 consumer device.
+> Python BLE client for the EMAY SleepO2 pulse oximeter's real-time
+> Bluetooth streaming protocol. Read SpO₂ and pulse rate at 1 Hz from a
+> $30 consumer device.
 
 This is the Python package of the multi-language EMAY SleepO2 SDK. For the
 other bindings (Swift, Node.js, Rust, Go, Kotlin) see the
 [repository README](https://github.com/chenders/emay-sleepo2#readme). The
 reverse-engineered protocol is documented in
-[spec.md](https://github.com/chenders/emay-sleepo2/blob/main/spec.md).
+[SPEC.md](https://github.com/chenders/emay-sleepo2/blob/main/SPEC.md).
 
 ## Installation
 
 ```bash
-pip install emay-sleepo2          # CSV parsing only — zero dependencies
+pip install emay-sleepo2          # protocol layer only — zero dependencies
 pip install "emay-sleepo2[ble]"   # + live BLE streaming (installs bleak)
 ```
 
@@ -60,23 +60,6 @@ sequence, and keeps the stream alive with a heartbeat command. Useful knobs:
 
 `Reading.spo2` and `Reading.pulse` are `Optional[int]`: `None` means the
 sensor couldn't acquire that measurement (finger off), **not** zero.
-
-## CSV Parsing (no BLE required)
-
-The EMAY app exports session CSVs. Parse them without any BLE dependency:
-
-```python
-from emay_sleepo2 import parse_csv_file
-
-readings, warnings = parse_csv_file("session.csv")
-```
-
-`parse_csv(content, timezone=None, correct_dst_fold=True)` accepts raw CSV
-text; both return `(readings, warnings)`. Malformed rows become warnings —
-`ValueError` is raised only when the CSV has no data rows, and
-`parse_csv_file` can also raise `OSError` for unreadable files. DST fold
-correction disambiguates timestamps recorded during the repeated fall-back
-hour.
 
 ## Protocol Layer
 
