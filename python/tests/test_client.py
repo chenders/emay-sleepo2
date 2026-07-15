@@ -5,7 +5,7 @@ import logging
 
 import pytest
 
-pytest.importorskip("bleak", reason="client tests need the ble extra")
+pytest.importorskip("bleak", reason="client tests need bleak installed")
 
 from emay_sleepo2.client import EMAYClient  # noqa: E402
 from emay_sleepo2.types import Status, FailureReason  # noqa: E402

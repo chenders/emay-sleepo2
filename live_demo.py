@@ -3,7 +3,7 @@
 
 Make sure your EMAY SleepO2 is on and nearby, then run:
 
-    pip install emay-sleepo2[ble]
+    pip install emay-sleepo2
     python live_demo.py
 
 Press Ctrl-C to quit cleanly.

@@ -85,7 +85,7 @@ bring-your-own-adapter interface in Go).
 ### Python
 
 ```bash
-pip install "emay-sleepo2[ble]"   # BLE streaming (installs bleak)
+pip install emay-sleepo2   # BLE streaming included (installs bleak)
 ```
 
 ```python

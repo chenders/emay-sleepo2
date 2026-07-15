@@ -13,8 +13,7 @@ reverse-engineered protocol is documented in
 ## Installation
 
 ```bash
-pip install emay-sleepo2          # protocol layer only — zero dependencies
-pip install "emay-sleepo2[ble]"   # + live BLE streaming (installs bleak)
+pip install emay-sleepo2   # includes live BLE streaming (installs bleak)
 ```
 
 Requires Python 3.10+. BLE streaming works anywhere
