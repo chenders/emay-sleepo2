@@ -246,6 +246,12 @@ class EMAYClient(private val context: Context) {
         heartbeatJob = scope?.launch {
             while (isActive) {
                 delay(heartbeatIntervalMs)
+                // Re-check cancellation right after delay() resumes. delay() only
+                // throws if cancelled while suspended; if cancel() lands just after
+                // it returns, nothing below suspends before writeCharacteristic(),
+                // so a stray HEARTBEAT could still collide with stop()'s
+                // STOP_REALTIME write. Observe cancellation before issuing the write.
+                if (!isActive) break
                 if (_status != EMAYStatus.Streaming) break
                 val gatt = bluetoothGatt ?: break
                 val ch = writeChar ?: break

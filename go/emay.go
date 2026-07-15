@@ -192,8 +192,14 @@ func (c *Client) Stop() error {
 func (c *Client) stopHeartbeat() {
 	if c.hbDone != nil {
 		close(c.hbDone)
-		c.hbDone = nil
+		// Wait for the goroutine to observe the close and exit BEFORE clearing
+		// hbDone. If we niled it first, the goroutine's next select would read a
+		// nil channel — its <-c.hbDone case would be permanently disabled, it
+		// would never see the close, and hbWG.Wait() would hang forever
+		// (reintroducing the teardown hang). Clearing after Wait() also removes
+		// the data race on hbDone, since the goroutine is gone by then.
 		c.hbWG.Wait()
+		c.hbDone = nil
 	}
 }
 
