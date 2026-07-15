@@ -26,6 +26,13 @@ from .downsampler import LiveDownsampler
 
 logger = logging.getLogger(__name__)
 
+# Teardown safety timeouts (seconds). Even after awaiting the heartbeat, a
+# wedged backend write or disconnect must never hang stop() forever. Normal
+# write-response round trips are well under a second and disconnects are near
+# instant; these ceilings only trip when something is genuinely stuck.
+STOP_WRITE_TIMEOUT: float = 2.0
+DISCONNECT_TIMEOUT: float = 5.0
+
 
 class EMAYClient:
     """Async BLE client for the EMAY SleepO2.
@@ -96,21 +103,53 @@ class EMAYClient:
         await self._begin_monitoring()
 
     async def stop(self) -> None:
-        """Stop streaming and disconnect."""
+        """Stop streaming and disconnect.
+
+        Ordering matters: the heartbeat task is cancelled *and awaited* before
+        any teardown write. A heartbeat write left in-flight on the write
+        characteristic otherwise races STOP_REALTIME and can orphan its
+        write-response, wedging stop() and holding the BLE link open (the device
+        "stays connected"). The teardown write and disconnect are additionally
+        bounded by timeouts so a wedged backend can never hang stop() forever.
+        """
         self._want_scan = False
         if self._heartbeat_task:
             self._heartbeat_task.cancel()
+            try:
+                await self._heartbeat_task
+            except (asyncio.CancelledError, Exception):
+                pass
             self._heartbeat_task = None
-        if self._client and self._client.is_connected and self._write_char:
+        # Keep a local handle: disconnect() fires _on_disconnect, which nulls
+        # out self._client before we can inspect the result below.
+        client = self._client
+        if client is not None and client.is_connected and self._write_char:
             try:
-                await self._client.write_gatt_char(self._write_char, STOP_REALTIME, response=True)
-            except Exception:
-                pass
-        if self._client:
+                await asyncio.wait_for(
+                    client.write_gatt_char(self._write_char, STOP_REALTIME, response=True),
+                    timeout=STOP_WRITE_TIMEOUT,
+                )
+            except asyncio.TimeoutError:
+                logger.warning("EMAY: STOP_REALTIME write timed out during stop(); tearing down anyway")
+            except Exception as e:
+                logger.warning("EMAY: STOP_REALTIME write failed during stop(): %r", e)
+        if client is not None:
             try:
-                await self._client.disconnect()
-            except Exception:
-                pass
+                await asyncio.wait_for(client.disconnect(), timeout=DISCONNECT_TIMEOUT)
+            except asyncio.TimeoutError:
+                logger.warning("EMAY: disconnect() timed out during stop(); resetting state anyway")
+            except Exception as e:
+                logger.warning("EMAY: disconnect() raised during stop(): %r", e)
+            else:
+                # A clean return does NOT guarantee the link dropped — on some
+                # backends disconnect() is a no-op and the peripheral keeps
+                # showing connected. Surface that case explicitly.
+                if client.is_connected:
+                    logger.warning(
+                        "EMAY: disconnect() returned but the link is still up; the device may keep reporting connected"
+                    )
+                else:
+                    logger.info("EMAY: disconnect() completed; link closed")
         self._reset_connection_state()
         self.status = Status.IDLE
 
