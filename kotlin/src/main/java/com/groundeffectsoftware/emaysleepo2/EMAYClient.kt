@@ -1,4 +1,4 @@
-package com.groundeffectsoftware.com.emaysleepo2
+package com.groundeffectsoftware.emaysleepo2
 
 import android.bluetooth.*
 import android.bluetooth.BluetoothGatt.*
