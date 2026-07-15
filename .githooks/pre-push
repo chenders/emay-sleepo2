@@ -16,7 +16,7 @@ section "Go: fmt + vet + test"
 # ---- Python ----
 section "Python: format + lint + test"
 (cd "$ROOT/python" && ruff format --check src/ tests/ && ruff check src/ tests/ &&
-    PYTHONPATH=src python -m pytest tests/ -q) || FAILED+=("python")
+    PYTHONPATH=src uv run --extra dev python -m pytest tests/ -q) || FAILED+=("python")
 
 # ---- Node ----
 section "Node: fmt + tsc + test"
