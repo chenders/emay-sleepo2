@@ -53,6 +53,10 @@ sequence, and keeps the stream alive with a heartbeat command. Useful knobs:
   instead of scanning.
 - `emay.on_status_change` — observe the `Status` state machine
   (`IDLE`, `SCANNING`, `CONNECTING`, `STREAMING`, `FAILED`, …).
+- `emay.failure_reason` — when status is `FAILED`, a best-effort
+  `FailureReason` (`NOT_FOUND` / `CONNECTION_FAILED`) with a `.message`.
+  `NOT_FOUND` can't tell "connected to another app" from "off / out of
+  range" — the device goes silent while held by another central.
 - `emay.on_minute_samples` — receive finalized per-minute mean
   `MinuteSample` values from the built-in `LiveDownsampler`.
 - `EMAYClient(heartbeat_interval=1.5, stale_timeout=4.0, auto_reconnect=True)`

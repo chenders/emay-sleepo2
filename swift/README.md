@@ -60,6 +60,11 @@ surface:
   the built-in `EMAYLiveDownsampler`.
 - `emay.isStreaming` / `emay.latestReading` — current state and last
   reading.
+- `emay.failureReason` — best-effort `FailureReason` (`.notFound` /
+  `.connectionFailed`, each with `.message`) explaining a `.failed`.
+  `.notFound` can't distinguish "connected to another app" from "off / out
+  of range". (Swift scans indefinitely, so `.notFound` is currently only
+  produced by other bindings.)
 - `heartbeatInterval` (1.5 s), `staleTimeout` (4 s), and `autoReconnect`
   are configurable properties.
 

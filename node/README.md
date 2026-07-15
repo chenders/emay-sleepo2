@@ -53,6 +53,10 @@ command. Useful surface:
 - `"minuteSamples"` event — receive finalized per-minute mean
   `MinuteSample` values from the built-in `LiveDownsampler`.
 - `emay.status` / `emay.latestReading` — current state and last reading.
+- `emay.failureReason` — when status is `Failed`, a best-effort
+  `FailureReason` (`NotFound` / `ConnectionFailed`); pass it to
+  `failureReasonMessage(...)` for display text. `NotFound` can't tell
+  "connected to another app" from "off / out of range".
 
 `reading.spo2` and `reading.pulse` are nullable: `null` means the sensor
 couldn't acquire that measurement (finger off), **not** zero.
