@@ -110,7 +110,9 @@ import EMAYSleepO2
 
 let emay = EMAYClient()
 emay.onReading = { reading in
-    print("SpO₂: \(reading.spo2 ?? 0)%  HR: \(reading.pulse ?? 0)")
+    let spo2 = reading.spo2.map { "\($0)%" } ?? "—"
+    let pulse = reading.pulse.map(String.init) ?? "—"
+    print("SpO₂: \(spo2)  HR: \(pulse)")
 }
 emay.start()
 ```
