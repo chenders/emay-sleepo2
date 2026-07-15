@@ -2,8 +2,12 @@
 
 import asyncio
 
-from emay_sleepo2.client import EMAYClient
-from emay_sleepo2.types import Status
+import pytest
+
+pytest.importorskip("bleak", reason="client tests need the ble extra")
+
+from emay_sleepo2.client import EMAYClient  # noqa: E402
+from emay_sleepo2.types import Status  # noqa: E402
 
 
 def test_scan_failure_fires_failed_once(monkeypatch):
