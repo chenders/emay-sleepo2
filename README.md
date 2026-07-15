@@ -155,14 +155,27 @@ Reading {
 
 ## Packages
 
+### Production (BLE client + tests + published)
+
 | Language | Source           | Platform       | BLE Library    |
 |----------|------------------|----------------|----------------|
 | Swift    | [`swift/`](swift)| iOS/macOS      | CoreBluetooth  |
 | Python   | [`python/`](python) | macOS/Linux/Windows/RPi | bleak |
-| Node.js  | [`node/`](node)  | macOS/Linux/Windows/RPi | noble |
+| Node.js  | [`node/`](node)  | macOS/Linux/Windows/RPi | @abandonware/noble |
 | Rust     | [`rust/`](rust)  | macOS/Linux/Windows | btleplug |
 | Go       | [`go/`](go)      | macOS/Linux/Windows/embedded | TinyGo BLE |
 | Kotlin   | [`kotlin/`](kotlin) | Android 8.0+ | Android BLE |
+
+### Reference (BLE client — compile/syntax check only on CI)
+
+| Language | Source           | Platform       | BLE Library    |
+|----------|------------------|----------------|----------------|
+| Java     | [`java/`](java)  | Android 8.0+   | Android `BluetoothGatt` |
+| Scala    | [`scala/`](scala)| Android 8.0+   | Android `BluetoothGatt` (Scala) |
+| C        | [`c/`](c)        | Linux          | BlueZ / D-Bus  |
+| C++      | [`cpp/`](cpp)    | macOS/Linux/Windows | SimpleBLE |
+| C#       | [`csharp/`](csharp) | Windows/Linux/macOS | Windows.Devices.Bluetooth / BlueZ |
+| PHP      | [`php/`](php)    | Linux          | BlueZ via FFI  |
 
 ## About
 

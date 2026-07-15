@@ -31,9 +31,3 @@ export enum Status {
   BluetoothUnsupported = "bluetoothUnsupported",
   Failed = "failed",
 }
-
-/** CSV parse result. */
-export interface CSVResult {
-  readings: Reading[];
-  warnings: string[];
-}

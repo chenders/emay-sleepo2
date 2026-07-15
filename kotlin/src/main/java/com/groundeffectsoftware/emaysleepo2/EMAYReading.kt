@@ -29,9 +29,3 @@ enum class EMAYStatus {
     val isActive: Boolean
         get() = this == Scanning || this == Connecting || this == Streaming
 }
-
-/** CSV parse result. */
-data class CSVResult(
-    val readings: List<EMAYReading>,
-    val warnings: List<String>
-)

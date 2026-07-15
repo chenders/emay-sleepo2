@@ -2,7 +2,7 @@
 name = "emay-sleepo2"
 version = "1.0.0"
 edition = "2024"
-description = "BLE client and CSV parser for the EMAY SleepO2 pulse oximeter"
+description = "BLE client for the EMAY SleepO2 pulse oximeter"
 readme = "README.md"
 license = "MIT"
 repository = "https://github.com/chenders/emay-sleepo2"
@@ -18,7 +18,6 @@ futures = { version = "0.3", optional = true }
 [features]
 default = []
 ble = ["btleplug", "tokio", "uuid", "futures"]
-csv = []
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }

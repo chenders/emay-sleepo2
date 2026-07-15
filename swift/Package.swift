@@ -10,7 +10,6 @@ let package = Package(
     ],
     products: [
         .library(name: "EMAYSleepO2", targets: ["EMAYSleepO2"]),
-        .library(name: "EMAYSleepO2CSV", targets: ["EMAYSleepO2CSV"]),
     ],
     targets: [
         .target(
@@ -18,20 +17,10 @@ let package = Package(
             dependencies: [],
             path: "Sources/EMAYSleepO2"
         ),
-        .target(
-            name: "EMAYSleepO2CSV",
-            dependencies: ["EMAYSleepO2"],
-            path: "Sources/EMAYSleepO2CSV"
-        ),
         .testTarget(
             name: "EMAYSleepO2Tests",
             dependencies: ["EMAYSleepO2"],
             path: "Tests/EMAYSleepO2Tests"
-        ),
-        .testTarget(
-            name: "EMAYSleepO2CSVTests",
-            dependencies: ["EMAYSleepO2CSV"],
-            path: "Tests/EMAYSleepO2CSVTests"
         ),
     ]
 )
