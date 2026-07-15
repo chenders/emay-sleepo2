@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 260" width="640" height="260"
+     role="img" aria-labelledby="gd-title gd-desc" font-family="ui-monospace, 'SF Mono', Menlo, monospace">
+  <title id="gd-title">Two candidate characteristic paths found during enumeration</title>
+  <desc id="gd-desc">The SleepO2 device exposes two candidate GATT paths at discovery time: service FF12 with write FF01 and notify FF02, later confirmed the real transport in Step 4; and a second FF00 service with an FF04/FF05/FF06 trio, investigated but not pursued further.</desc>
+  <defs>
+    <linearGradient id="gd-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0c1219"/><stop offset="1" stop-color="#090d12"/>
+    </linearGradient>
+    <style>
+      .ring{transform-box:fill-box;transform-origin:center;animation:gdring 2.2s ease-out infinite}
+      .ring.b{animation-delay:1.1s}
+      @keyframes gdring{0%{transform:scale(.4);opacity:.6}100%{transform:scale(1.6);opacity:0}}
+      @media (prefers-reduced-motion:reduce){svg *{animation-play-state:paused!important}}
+    </style>
+  </defs>
+
+  <rect width="640" height="260" rx="18" fill="url(#gd-bg)"/>
+  <rect x="1" y="1" width="638" height="258" rx="17" fill="none" stroke="#1a2530" stroke-width="1"/>
+
+  <!-- device -->
+  <g transform="translate(255,18)">
+    <rect x="0" y="0" width="130" height="46" rx="12" fill="#161f28" stroke="#2b3a48"/>
+    <text x="65" y="20" text-anchor="middle" font-size="12" fill="#c9d3db">SleepO2</text>
+    <text x="65" y="36" text-anchor="middle" font-size="10.5" fill="#8798a6">GATT server</text>
+    <circle class="ring"   cx="65" cy="46" r="10" fill="none" stroke="#2ee6c8" stroke-width="1.5"/>
+    <circle class="ring b" cx="65" cy="46" r="10" fill="none" stroke="#2ee6c8" stroke-width="1.5"/>
+  </g>
+
+  <!-- real path (left, solid teal) -->
+  <path d="M300,64 Q220,110 150,140" fill="none" stroke="#2ee6c8" stroke-width="2.5"/>
+  <g transform="translate(60,148)">
+    <rect width="180" height="58" rx="10" fill="#12202b" stroke="#2ee6c8" stroke-width="1.5"/>
+    <text x="90" y="24" text-anchor="middle" font-size="13" fill="#7ff0dd" font-weight="700">FF12 · write FF01</text>
+    <text x="90" y="42" text-anchor="middle" font-size="13" fill="#7ff0dd" font-weight="700">notify FF02</text>
+  </g>
+  <path d="M150,206 L150,220" stroke="#57d68d" stroke-width="2"/>
+  <text x="150" y="236" text-anchor="middle" font-size="11.5" fill="#57d68d">&#10003; confirmed real transport — Step 4</text>
+
+  <!-- other path (right, dotted grey, fades) -->
+  <path d="M320,64 Q400,110 460,138" fill="none" stroke="#5b6b78" stroke-width="2" stroke-dasharray="2 6"/>
+  <g transform="translate(390,148)">
+    <rect width="180" height="58" rx="10" fill="#12181f" stroke="#3a4552" stroke-width="1.5" stroke-dasharray="4 5"/>
+    <text x="90" y="24" text-anchor="middle" font-size="13" fill="#8798a6">FF00 · FF04/FF05</text>
+    <text x="90" y="42" text-anchor="middle" font-size="13" fill="#8798a6">FF06 trio</text>
+  </g>
+  <text x="480" y="236" text-anchor="middle" font-size="11.5" fill="#8798a6">investigated, not pursued further</text>
+</svg>

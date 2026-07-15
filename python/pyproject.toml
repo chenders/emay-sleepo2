@@ -40,7 +40,7 @@ all = ["bleak>=0.22", "pytest", "ruff"]
 Homepage = "https://github.com/chenders/emay-sleepo2"
 Repository = "https://github.com/chenders/emay-sleepo2"
 Issues = "https://github.com/chenders/emay-sleepo2/issues"
-Specification = "https://github.com/chenders/emay-sleepo2/blob/main/spec.md"
+Specification = "https://github.com/chenders/emay-sleepo2/blob/main/SPEC.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]

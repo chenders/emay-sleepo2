@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 260" width="760" height="260"
+     role="img" aria-labelledby="bl-title bl-desc" font-family="ui-monospace, 'SF Mono', Menlo, monospace">
+  <title id="bl-title">The 8-byte data frame, annotated</title>
+  <desc id="bl-desc">A worked example frame eb 01 05 44 5e 7f 00 12 arriving on the notify characteristic, with each byte position labeled: magic, version, length, pulse, SpO2, trailer, reserved, and checksum. Pulse decodes to 68 bpm and SpO2 to 94 percent.</desc>
+  <defs>
+    <linearGradient id="bl-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0c1219"/><stop offset="1" stop-color="#090d12"/>
+    </linearGradient>
+    <style>
+      .pulse{animation:blpulse 2.6s ease-in-out infinite}
+      @keyframes blpulse{0%,100%{opacity:.7}50%{opacity:1}}
+      @media (prefers-reduced-motion:reduce){svg *{animation-play-state:paused!important}}
+    </style>
+  </defs>
+
+  <rect width="760" height="260" rx="18" fill="url(#bl-bg)"/>
+  <rect x="1" y="1" width="758" height="258" rx="17" fill="none" stroke="#1a2530" stroke-width="1"/>
+
+  <text x="380" y="34" text-anchor="middle" font-size="13" fill="#8798a6">notify characteristic FF02 — one data frame</text>
+
+  <!-- 8 byte chips -->
+  <g transform="translate(56,52)">
+    <!-- chip template positions: x = i*72 -->
+    <!-- byte 0: magic -->
+    <g transform="translate(0,0)">
+      <rect width="62" height="40" rx="8" fill="#12202b" stroke="#2ee6c8" stroke-width="1.5"/>
+      <text x="31" y="26" text-anchor="middle" font-size="15" fill="#7ff0dd" font-weight="700">EB</text>
+      <line x1="31" y1="40" x2="31" y2="66" stroke="#5f7688"/>
+      <text x="31" y="82" text-anchor="middle" font-size="12" fill="#8798a6">magic</text>
+    </g>
+    <!-- byte 1: version -->
+    <g transform="translate(72,0)">
+      <rect width="62" height="40" rx="8" fill="#12202b" stroke="#2ee6c8" stroke-width="1.5"/>
+      <text x="31" y="26" text-anchor="middle" font-size="15" fill="#7ff0dd" font-weight="700">01</text>
+      <line x1="31" y1="0" x2="31" y2="-26" stroke="#5f7688"/>
+      <text x="31" y="-34" text-anchor="middle" font-size="12" fill="#8798a6">version</text>
+    </g>
+    <!-- byte 2: length -->
+    <g transform="translate(144,0)">
+      <rect width="62" height="40" rx="8" fill="#12202b" stroke="#2ee6c8" stroke-width="1.5"/>
+      <text x="31" y="26" text-anchor="middle" font-size="15" fill="#7ff0dd" font-weight="700">05</text>
+      <line x1="31" y1="40" x2="31" y2="66" stroke="#5f7688"/>
+      <text x="31" y="82" text-anchor="middle" font-size="12" fill="#8798a6">length</text>
+    </g>
+    <!-- byte 3: pulse (gold, live payload) -->
+    <g transform="translate(216,0)" class="pulse">
+      <rect width="62" height="40" rx="8" fill="#241b0c" stroke="#ffcf5c" stroke-width="2"/>
+      <text x="31" y="26" text-anchor="middle" font-size="15" fill="#ffcf5c" font-weight="700">44</text>
+      <line x1="31" y1="0" x2="31" y2="-26" stroke="#c9a04a"/>
+      <text x="31" y="-34" text-anchor="middle" font-size="12" fill="#ffcf5c">pulse = 68 bpm</text>
+    </g>
+    <!-- byte 4: spo2 (gold, live payload) -->
+    <g transform="translate(288,0)" class="pulse">
+      <rect width="62" height="40" rx="8" fill="#241b0c" stroke="#ffcf5c" stroke-width="2"/>
+      <text x="31" y="26" text-anchor="middle" font-size="15" fill="#ffcf5c" font-weight="700">5E</text>
+      <line x1="31" y1="40" x2="31" y2="66" stroke="#c9a04a"/>
+      <text x="31" y="82" text-anchor="middle" font-size="12" fill="#ffcf5c">SpO&#8322; = 94%</text>
+    </g>
+    <!-- byte 5: trailer -->
+    <g transform="translate(360,0)">
+      <rect width="62" height="40" rx="8" fill="#12202b" stroke="#2ee6c8" stroke-width="1.5"/>
+      <text x="31" y="26" text-anchor="middle" font-size="15" fill="#7ff0dd" font-weight="700">7F</text>
+      <line x1="31" y1="0" x2="31" y2="-26" stroke="#5f7688"/>
+      <text x="31" y="-34" text-anchor="middle" font-size="12" fill="#8798a6">trailer</text>
+    </g>
+    <!-- byte 6: reserved -->
+    <g transform="translate(432,0)">
+      <rect width="62" height="40" rx="8" fill="#12202b" stroke="#2ee6c8" stroke-width="1.5"/>
+      <text x="31" y="26" text-anchor="middle" font-size="15" fill="#7ff0dd" font-weight="700">00</text>
+      <line x1="31" y1="40" x2="31" y2="66" stroke="#5f7688"/>
+      <text x="31" y="82" text-anchor="middle" font-size="12" fill="#8798a6">reserved</text>
+    </g>
+    <!-- byte 7: checksum -->
+    <g transform="translate(504,0)">
+      <rect width="62" height="40" rx="8" fill="#12202b" stroke="#2ee6c8" stroke-width="1.5"/>
+      <text x="31" y="26" text-anchor="middle" font-size="15" fill="#7ff0dd" font-weight="700">12</text>
+      <line x1="31" y1="0" x2="31" y2="-26" stroke="#5f7688"/>
+      <text x="31" y="-34" text-anchor="middle" font-size="12" fill="#8798a6">checksum</text>
+    </g>
+  </g>
+
+  <text x="380" y="230" text-anchor="middle" font-size="11.5" fill="#57d68d">checksum = sum(bytes 0-6) &amp; 0x7F = 0x12 — verified</text>
+</svg>
