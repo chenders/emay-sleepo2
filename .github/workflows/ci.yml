@@ -172,12 +172,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Compile protocol
         run: |
-          g++ -std=c++17 -Wall -c -x c++ src/emay_sleepo2.hpp -o /dev/null || true
-          # Preprocess protocol code to verify syntax
-          g++ -std=c++17 -Wall -fsyntax-only -xc++ - <<'EOF'
-          #include "src/emay_sleepo2.hpp"
-          int main() { return 0; }
-          EOF
+          g++ -std=c++17 -Wall -fsyntax-only -I src -include src/emay_sleepo2.hpp -xc++ /dev/null
           echo "Protocol syntax check passed"
 
   # ---- C# ----

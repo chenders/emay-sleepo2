@@ -21,5 +21,4 @@ export {
   NOTIFY_UUID,
 } from "./protocol.js";
 export { LiveDownsampler } from "./downsampler.js";
-export { parseCSV, parseCSVFile, DSTFoldCorrector } from "./csv-parser.js";
-export { Reading, MinuteSample, Status, CSVResult } from "./types.js";
+export { Reading, MinuteSample, Status } from "./types.js";

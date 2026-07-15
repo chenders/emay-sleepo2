@@ -16,10 +16,9 @@ from .protocol import (
     NOTIFY_UUID,
 )
 from .downsampler import LiveDownsampler
-from .csv_parser import parse_csv, parse_csv_file
 
 # EMAYClient requires bleak (pip install bleak). Import it explicitly
-# to avoid load failures when only CSV parsing is needed.
+# to avoid load failures when only the protocol layer is needed.
 try:
     from .client import EMAYClient
 except ImportError:
@@ -30,8 +29,6 @@ __all__ = [
     "MinuteSample",
     "Status",
     "LiveDownsampler",
-    "parse_csv",
-    "parse_csv_file",
     "parse_reading",
     "checksum",
     "command",
