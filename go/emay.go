@@ -4,6 +4,7 @@ package emay
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -111,6 +112,7 @@ type Client struct {
 	lastReadAt    time.Time
 	wantScan      bool
 	hbDone        chan struct{}
+	hbWG          sync.WaitGroup
 	downsampler   LiveDownsampler
 	knownAddr     string
 	autoReconnect bool
@@ -165,19 +167,50 @@ func (c *Client) Start(addr string) error {
 // Stop ends streaming and disconnects.
 func (c *Client) Stop() error {
 	c.wantScan = false
-	if c.hbDone != nil {
-		close(c.hbDone)
-		c.hbDone = nil
-	}
+	// Stop the heartbeat and WAIT for its goroutine to fully exit before any
+	// teardown write. Otherwise a heartbeat write can still be in-flight on the
+	// write characteristic when STOP_REALTIME / Disconnect run below; its
+	// orphaned write-response wedges that call forever and the BLE link never
+	// drops (the device "stays connected"). The join also removes the data race
+	// on writeChar/hbDone between Stop and the heartbeat goroutine.
+	c.stopHeartbeat()
+
+	// Bound each teardown op so a wedged backend cannot hang Stop() forever.
 	if c.writeChar != nil {
-		c.writeChar.Write(stopRealtime)
+		withTimeout(2*time.Second, func() { c.writeChar.Write(stopRealtime) })
 	}
 	if c.peripheral != nil {
-		c.peripheral.Disconnect()
+		withTimeout(5*time.Second, func() { c.peripheral.Disconnect() })
 	}
 	c.resetState()
 	c.setStatus(StatusIdle)
 	return nil
+}
+
+// stopHeartbeat signals the heartbeat goroutine to exit and blocks until it
+// has fully returned, guaranteeing no heartbeat write is in-flight afterward.
+func (c *Client) stopHeartbeat() {
+	if c.hbDone != nil {
+		close(c.hbDone)
+		c.hbDone = nil
+		c.hbWG.Wait()
+	}
+}
+
+// withTimeout runs fn, returning when it completes or after d, whichever comes
+// first. If fn is wedged on a BLE call it keeps running in its own goroutine
+// (leaked) rather than blocking the caller past d — the right tradeoff for a
+// best-effort teardown that must not hang.
+func withTimeout(d time.Duration, fn func()) {
+	done := make(chan struct{})
+	go func() {
+		fn()
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(d):
+	}
 }
 
 func (c *Client) beginMonitoring() error {
@@ -272,7 +305,9 @@ func (c *Client) connectAndStream(addr string) error {
 
 func (c *Client) startHeartbeat() {
 	c.hbDone = make(chan struct{})
+	c.hbWG.Add(1)
 	go func() {
+		defer c.hbWG.Done()
 		ticker := time.NewTicker(c.hbInterval)
 		defer ticker.Stop()
 		for {
@@ -299,10 +334,7 @@ func (c *Client) startHeartbeat() {
 }
 
 func (c *Client) resetState() {
-	if c.hbDone != nil {
-		close(c.hbDone)
-		c.hbDone = nil
-	}
+	c.stopHeartbeat()
 	c.peripheral = nil
 	c.writeChar = nil
 	c.notifyChar = nil

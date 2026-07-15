@@ -10,6 +10,7 @@ Press Ctrl-C to quit cleanly.
 """
 
 import asyncio
+import logging
 import signal
 import sys
 from datetime import datetime
@@ -77,10 +78,28 @@ def on_reading(reading) -> None:
 # main
 # ---------------------------------------------------------------------------
 
+def setup_logging() -> None:
+    """Surface the SDK's own log messages (INFO+) while keeping bleak quiet.
+
+    Without this, warnings like a disconnect that leaves the link up would be
+    emitted by the SDK but never printed, since Python logging is silent by
+    default. We keep the root at WARNING so third-party libs don't spam, and
+    lift just the SDK logger to INFO so its teardown diagnostics show through.
+    """
+    logging.basicConfig(
+        level=logging.WARNING,
+        format=f"{DIM}[%(asctime)s]{RESET} {YELLOW}%(levelname)s{RESET} %(name)s: %(message)s",
+        datefmt="%H:%M:%S",
+    )
+    logging.getLogger("emay_sleepo2").setLevel(logging.INFO)
+
+
 async def main() -> None:
     print(f"\n{BOLD}{CYAN}EMAY SleepO2 — Live Demo{RESET}\n")
     print(f"{DIM}Make sure your device is on and within Bluetooth range.{RESET}")
     print(f"{DIM}Press {BOLD}Ctrl-C{RESET}{DIM} to stop.{RESET}\n")
+
+    setup_logging()
 
     client = EMAYClient()
     client.on_status_change = on_status

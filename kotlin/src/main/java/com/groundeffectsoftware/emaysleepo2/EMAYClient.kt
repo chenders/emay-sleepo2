@@ -59,6 +59,7 @@ class EMAYClient(private val context: Context) {
     private val handler = Handler(Looper.getMainLooper())
     private var knownAddress: String? = null
     private var scope: CoroutineScope? = null
+    private var heartbeatJob: Job? = null
 
     private val serviceUUID = UUID.fromString(EMAYProtocol.SERVICE_UUID)
     private val writeUUID = UUID.fromString(EMAYProtocol.WRITE_UUID)
@@ -86,6 +87,12 @@ class EMAYClient(private val context: Context) {
 
     fun stop() {
         wantScan = false
+        // Stop the heartbeat FIRST so it can't issue a write that collides with
+        // the STOP_REALTIME write below. Android permits only one outstanding
+        // GATT operation, so a heartbeat write still in the queue would make
+        // writeCharacteristic(STOP_REALTIME) silently return false (dropped).
+        heartbeatJob?.cancel()
+        heartbeatJob = null
         bluetoothGatt?.let { gatt ->
             writeChar?.let { ch ->
                 ch.value = EMAYProtocol.STOP_REALTIME
@@ -236,7 +243,7 @@ class EMAYClient(private val context: Context) {
     }
 
     private fun startHeartbeat() {
-        scope?.launch {
+        heartbeatJob = scope?.launch {
             while (isActive) {
                 delay(heartbeatIntervalMs)
                 if (_status != EMAYStatus.Streaming) break
@@ -255,6 +262,8 @@ class EMAYClient(private val context: Context) {
     }
 
     private fun resetState() {
+        heartbeatJob?.cancel()
+        heartbeatJob = null
         bluetoothGatt?.close()
         bluetoothGatt = null
         writeChar = null
