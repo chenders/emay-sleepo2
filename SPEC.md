@@ -9,6 +9,7 @@
 
 **Contents:** [Hardware](#hardware) · [Scope & Compatibility](#scope--compatibility)
 · [GATT Profile](#gatt-profile) · [Command Protocol](#command-protocol) ·
+[Client Connection Lifecycle](#client-connection-lifecycle) ·
 [Data Frame Format](#data-frame-format) · [Revision History](#revision-history)
 
 ## Hardware
@@ -119,9 +120,47 @@ after a heartbeat gap — just resume heartbeats.
 Send `stopRealtime` before disconnecting. The device stops streaming and
 the BLE connection can be torn down.
 
+The full cycle — handshake once, then a steady state where data frames and
+heartbeats cross in opposite directions until `stop()` — is easier to see
+than to describe:
+
+<p align="center">
+  <img src="diagrams/handshake-heartbeat.svg" alt="Four handshake commands in order, then a sustained loop of ~1Hz data frames flowing device to client crossed with a heartbeat at most every 2 seconds flowing client to device" width="720">
+</p>
+
+## Client Connection Lifecycle
+
+Every binding models the connection as a small state machine: `Idle`,
+`Scanning`, `Connecting`, `Streaming`, `Failed`.
+
+- `Idle → Scanning`: `start()` called with no known device address — the
+  client scans for the device.
+- `Idle → Connecting`: `start(address)` called with a known device
+  address — skips scanning and connects directly.
+- `Scanning → Connecting`: the device is found.
+- `Scanning → Failed`: scan timeout, no device found.
+- `Connecting → Streaming`: the CCCD is subscribed and the start
+  sequence's `startRealtime` is acknowledged.
+- `Connecting → Failed`: a connection or characteristic-discovery error.
+- `Streaming → Idle`: `stop()` called deliberately.
+- `Streaming → Failed`: heartbeat timeout or an unexpected disconnect.
+
+<p align="center">
+  <img src="diagrams/state-lifecycle.svg" alt="Client connection lifecycle: Idle to Scanning to Connecting to Streaming, looping back to Idle on stop(), with Scanning, Connecting, and Streaming each able to fall to Failed" width="660">
+</p>
+
+This state machine is the same shape across all six language bindings
+(`Status` / `EMAYStatus` enum) — per-binding reconnect behavior (e.g. an
+optional auto-reconnect flag) sits on top of this core machine and isn't
+part of the protocol-level contract.
+
 ## Data Frame Format
 
 Real-time data arrives on notify characteristic `FF02` as exactly **8 bytes**:
+
+<p align="center">
+  <img src="diagrams/byte-layout.svg" alt="The 8-byte data frame eb 01 05 44 5e 7f 00 12 annotated byte by byte: magic, version, length, pulse (68 bpm), SpO2 (94 percent), trailer, reserved, checksum" width="760">
+</p>
 
 ```
 Byte 0:  [magic]     0xEB — frame start marker
@@ -182,6 +221,15 @@ to pass the checksum:
 Values **inside** these ranges are trusted as genuine, even if extreme.
 Silently filtering a real 40 bpm bradycardia or 70% SpO₂ because it
 "looks implausible" is a false-reassurance hazard for medical monitoring.
+
+The one nuance worth seeing rather than just reading: a sentinel byte
+means only that field is absent, but an out-of-range byte that *isn't* a
+sentinel takes down the whole frame — including a perfectly good pulse
+reading riding alongside it.
+
+<p align="center">
+  <img src="diagrams/frame-validation.svg" alt="Two example frames: SpO2 byte 0xFF is a sentinel, so the reading survives with SpO2 as nil; SpO2 byte 0x7A (122 percent) is not a sentinel and out of range, so the whole frame is rejected, not just the SpO2 field" width="700">
+</p>
 
 ### DST Fall-Back Fold Correction
 

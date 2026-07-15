@@ -19,6 +19,10 @@ no authentication or encryption was bypassed (the device uses none). Full
 version: [A note on scope and ethics](#a-note-on-scope-and-ethics), at the
 end.
 
+<p align="center">
+  <img src="diagrams/investigation-map.svg" alt="The investigation trail from first scan to breakthrough, with two dead-end side-paths marking the wrong checksum-mask guess and the reversed start/stop hypothesis, both looping back onto the main trail" width="900">
+</p>
+
 ---
 
 ## Why: CSV import wasn't enough anymore
@@ -59,6 +63,10 @@ Enumerating the connected GATT tree turned up two candidate notify
 characteristics: `FF02` (paired with a `FF01` write characteristic, both
 under the `FF12` service) and a second `FF04`/`FF05`/`FF06` trio under a
 `FF00` service. Both looked plausible.
+
+<p align="center">
+  <img src="diagrams/gatt-discovery.svg" alt="The SleepO2 device forking into two candidate GATT paths: FF12 with write FF01 and notify FF02, later confirmed the real transport in Step 4, versus a separate FF00 service with an FF04/FF05/FF06 trio, investigated but not pursued further" width="640">
+</p>
 
 ## Step 2: The wall — nothing streams on its own
 
@@ -192,6 +200,10 @@ the UI and behave completely differently: a default **local capture**, which
 sniffs the Mac's own Bluetooth radio, and **File → New iOS Trace**, which
 attaches to a connected iPhone over USB and captures *its* Bluetooth traffic
 instead.
+
+<p align="center">
+  <img src="diagrams/capture-topology.svg" alt="Local capture sniffs only the Mac's own Bluetooth radio and captures nothing useful; File then New iOS Trace attaches over USB to a connected iPhone and captures that phone's own Bluetooth radio, where the real EMAY conversation actually happens" width="780">
+</p>
 
 The first attempt used the wrong one. After installing Apple's Bluetooth
 diagnostics logging profile on the phone (required for the phone to emit

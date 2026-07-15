@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 450" width="660" height="450"
+     role="img" aria-labelledby="sl-title sl-desc" font-family="ui-monospace, 'SF Mono', Menlo, monospace">
+  <title id="sl-title">Client connection lifecycle, shown as the phone's own screen</title>
+  <desc id="sl-desc">Idle to Scanning on start(), Scanning to Connecting once the device is found, Connecting to Streaming once the start sequence is acknowledged, Streaming back to Idle on stop(). Scanning, Connecting, and Streaming can each fall to Failed on scan timeout, connect error, or heartbeat timeout/disconnect.</desc>
+  <defs>
+    <linearGradient id="sl-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0c1219"/><stop offset="1" stop-color="#090d12"/>
+    </linearGradient>
+    <style>
+      .ring{transform-box:fill-box;transform-origin:center;animation:slring 2s ease-out infinite}
+      .ring.b{animation-delay:1s}
+      @keyframes slring{0%{transform:scale(.3);opacity:.7}100%{transform:scale(1.8);opacity:0}}
+      .link{animation:sllink 1.4s ease-in-out infinite}
+      @keyframes sllink{0%,100%{opacity:.4}50%{opacity:1}}
+      .ecg{animation:slecg 1.8s linear infinite}
+      @keyframes slecg{from{transform:translateX(0)}to{transform:translateX(-40px)}}
+      .xmark{animation:slx 2.2s ease-in-out infinite}
+      @keyframes slx{0%,100%{opacity:.55}50%{opacity:1}}
+      @media (prefers-reduced-motion:reduce){svg *{animation-play-state:paused!important}}
+    </style>
+  </defs>
+
+  <rect width="660" height="450" rx="18" fill="url(#sl-bg)"/>
+  <rect x="1" y="1" width="658" height="448" rx="17" fill="none" stroke="#1a2530" stroke-width="1"/>
+
+  <!-- stop() loop-back, arcing OVER the top, drawn first so it sits behind the phones -->
+  <path d="M456,90 Q320,10 56,90" fill="none" stroke="#8798a6" stroke-width="1.5" stroke-dasharray="2 5"/>
+  <text x="256" y="30" text-anchor="middle" font-size="10" fill="#8798a6">stop() called deliberately</text>
+
+  <!-- Idle -->
+  <g transform="translate(20,90)">
+    <rect width="72" height="108" rx="14" fill="#12202b" stroke="#2b3a48"/>
+    <rect x="6" y="10" width="60" height="88" rx="6" fill="#0b141a"/>
+    <circle cx="36" cy="54" r="3.5" fill="#8798a6"/>
+    <text x="36" y="128" text-anchor="middle" font-size="11.5" fill="#c9d3db" font-weight="700">Idle</text>
+  </g>
+
+  <path d="M94,140 L146,140" stroke="#2ee6c8" stroke-width="2"/>
+  <text x="120" y="130" text-anchor="middle" font-size="9.5" fill="#57d68d">start()</text>
+  <text x="14" y="248" font-size="9" fill="#8798a6" font-style="italic">start(address)</text>
+  <text x="14" y="260" font-size="9" fill="#8798a6" font-style="italic">skips to Connecting</text>
+
+  <!-- Scanning -->
+  <g transform="translate(170,90)">
+    <rect width="72" height="108" rx="14" fill="#12202b" stroke="#2b3a48"/>
+    <rect x="6" y="10" width="60" height="88" rx="6" fill="#0b141a"/>
+    <circle class="ring"   cx="36" cy="54" r="10" fill="none" stroke="#2ee6c8" stroke-width="1.5"/>
+    <circle class="ring b" cx="36" cy="54" r="10" fill="none" stroke="#2ee6c8" stroke-width="1.5"/>
+    <text x="36" y="128" text-anchor="middle" font-size="11.5" fill="#c9d3db" font-weight="700">Scanning</text>
+  </g>
+
+  <path d="M244,140 L296,140" stroke="#2ee6c8" stroke-width="2"/>
+  <text x="270" y="130" text-anchor="middle" font-size="9" fill="#57d68d">found</text>
+
+  <!-- Connecting -->
+  <g transform="translate(298,90)">
+    <rect width="72" height="108" rx="14" fill="#12202b" stroke="#2b3a48"/>
+    <rect x="6" y="10" width="60" height="88" rx="6" fill="#0b141a"/>
+    <g class="link" transform="translate(36,54)">
+      <circle cx="-6" cy="0" r="5" fill="none" stroke="#7ff0dd" stroke-width="1.5"/>
+      <circle cx="6" cy="0" r="5" fill="none" stroke="#7ff0dd" stroke-width="1.5"/>
+    </g>
+    <text x="36" y="128" text-anchor="middle" font-size="11.5" fill="#c9d3db" font-weight="700">Connecting</text>
+  </g>
+
+  <path d="M372,140 L424,140" stroke="#2ee6c8" stroke-width="2"/>
+  <text x="398" y="130" text-anchor="middle" font-size="9.5" fill="#57d68d">ack'd</text>
+
+  <!-- Streaming -->
+  <g transform="translate(426,90)">
+    <rect width="72" height="108" rx="14" fill="#12202b" stroke="#2b3a48"/>
+    <rect x="6" y="10" width="60" height="88" rx="6" fill="#0b141a"/>
+    <text x="36" y="46" text-anchor="middle" font-size="13" fill="#57d68d" font-weight="700">97%</text>
+    <clipPath id="sl-ecgclip"><rect x="10" y="52" width="52" height="18"/></clipPath>
+    <g clip-path="url(#sl-ecgclip)">
+      <g transform="translate(10,60)"><g class="ecg">
+        <path d="M0,0 h6 l3,-9 l3,15 l3,-6 h9 M25,0 h6 l3,-9 l3,15 l3,-6 h9 M50,0 h6 l3,-9 l3,15 l3,-6 h9"
+              fill="none" stroke="#2ee6c8" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+      </g></g>
+    </g>
+    <text x="36" y="128" text-anchor="middle" font-size="11.5" fill="#c9d3db" font-weight="700">Streaming</text>
+  </g>
+
+  <!-- Failed, reached from Scanning / Connecting / Streaming — short labels near each source, well separated -->
+  <g transform="translate(298,300)">
+    <rect width="72" height="108" rx="14" fill="#161016" stroke="#4a2229"/>
+    <rect x="6" y="10" width="60" height="88" rx="6" fill="#0b141a"/>
+    <text class="xmark" x="36" y="62" text-anchor="middle" font-size="26" fill="#ff5c6c">&#10005;</text>
+    <text x="36" y="128" text-anchor="middle" font-size="11.5" fill="#ff8a95" font-weight="700">Failed</text>
+  </g>
+
+  <path d="M206,198 Q260,260 300,320" fill="none" stroke="#ff5c6c" stroke-width="1.5" stroke-dasharray="3 6"/>
+  <text x="196" y="254" text-anchor="middle" font-size="9.5" fill="#ff8a95">scan</text>
+  <text x="196" y="266" text-anchor="middle" font-size="9.5" fill="#ff8a95">timeout</text>
+
+  <path d="M334,198 L334,298" fill="none" stroke="#ff5c6c" stroke-width="1.5" stroke-dasharray="3 6"/>
+  <text x="352" y="254" text-anchor="middle" font-size="9.5" fill="#ff8a95">connect</text>
+  <text x="352" y="266" text-anchor="middle" font-size="9.5" fill="#ff8a95">error</text>
+
+  <path d="M462,198 Q410,260 368,320" fill="none" stroke="#ff5c6c" stroke-width="1.5" stroke-dasharray="3 6"/>
+  <text x="472" y="254" text-anchor="middle" font-size="9.5" fill="#ff8a95">heartbeat timeout</text>
+  <text x="472" y="266" text-anchor="middle" font-size="9.5" fill="#ff8a95">/ disconnect</text>
+</svg>
