@@ -132,6 +132,16 @@ impl EMAYClient {
         Ok(())
     }
 
+    /// Record a terminal failure: store the structured reason and transition
+    /// status to [`Status::Failed`]. Keeping the two in lockstep upholds the
+    /// [`Self::failure_reason`] contract — the reason is only meaningful (non-
+    /// [`FailureReason::None`]) alongside a failed status, never left dangling
+    /// while the client is still stuck in [`Status::Connecting`].
+    async fn fail(&self, reason: FailureReason, message: String) {
+        *self.failure_reason.lock().await = reason;
+        *self.status.lock().await = Status::Failed(message);
+    }
+
     async fn scan_and_connect(&self) -> Result<(), String> {
         let svc = Uuid::parse_str(SERVICE_UUID).map_err(|e| format!("UUID: {e}"))?;
 
@@ -168,14 +178,18 @@ impl EMAYClient {
         *self.status.lock().await = Status::Connecting;
 
         if let Err(e) = peripheral.connect().await {
-            *self.failure_reason.lock().await = FailureReason::ConnectionFailed;
-            return Err(format!("connect: {e}"));
+            let msg = format!("connect: {e}");
+            self.fail(FailureReason::ConnectionFailed, msg.clone())
+                .await;
+            return Err(msg);
         }
 
-        peripheral
-            .discover_services()
-            .await
-            .map_err(|e| format!("discover: {e}"))?;
+        if let Err(e) = peripheral.discover_services().await {
+            let msg = format!("discover: {e}");
+            self.fail(FailureReason::ConnectionFailed, msg.clone())
+                .await;
+            return Err(msg);
+        }
 
         let write_uuid = Uuid::parse_str(WRITE_UUID).unwrap();
         let notify_uuid = Uuid::parse_str(NOTIFY_UUID).unwrap();
@@ -183,12 +197,20 @@ impl EMAYClient {
         let chars = peripheral.characteristics();
 
         let Some(notify_char) = chars.iter().find(|c| c.uuid == notify_uuid) else {
-            *self.failure_reason.lock().await = FailureReason::ConnectionFailed;
+            self.fail(
+                FailureReason::ConnectionFailed,
+                "notify char not found".to_string(),
+            )
+            .await;
             return Err("notify char not found".to_string());
         };
 
         let Some(write_char) = chars.iter().find(|c| c.uuid == write_uuid) else {
-            *self.failure_reason.lock().await = FailureReason::ConnectionFailed;
+            self.fail(
+                FailureReason::ConnectionFailed,
+                "write char not found".to_string(),
+            )
+            .await;
             return Err("write char not found".to_string());
         };
 

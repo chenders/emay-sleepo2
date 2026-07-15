@@ -87,7 +87,10 @@ class EMAYBLEClient(ctx: Context):
   private var callback: Option[(Either[String, EMAYReading]) => Unit] = None
   private val scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
   @volatile private var streaming = false
-  private var _failureReason: FailureReason = FailureReason.None
+  // Written from BLE callback (binder) threads, read by consumers on another
+  // thread; @volatile (matching `streaming` above) guarantees the write is
+  // visible across threads without extra synchronization.
+  @volatile private var _failureReason: FailureReason = FailureReason.None
 
   def onEvent(cb: Either[String, EMAYReading] => Unit): Unit = callback = Some(cb)
 

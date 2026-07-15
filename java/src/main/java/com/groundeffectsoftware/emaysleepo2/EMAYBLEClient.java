@@ -114,7 +114,13 @@ public class EMAYBLEClient {
                 status("connecting");
                 gatt = r.getDevice().connectGatt(ctx, false, gattCallback);
             }
-            public void onScanFailed(int e) { failureReason = FailureReason.NOT_FOUND; status("scan failed: " + e); }
+            // onScanFailed fires when the BLE scanner itself cannot start
+            // (SCAN_FAILED_APPLICATION_REGISTRATION_FAILED, ..._INTERNAL_ERROR,
+            // etc.) — a local stack failure, NOT "scanned and did not find the
+            // device". Tagging it NOT_FOUND would show a misleading hint about
+            // the device being off/out-of-range/busy, so leave failureReason
+            // unclassified and let the status string carry the real cause.
+            public void onScanFailed(int e) { status("scan failed: " + e); }
         });
     }
 

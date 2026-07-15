@@ -254,21 +254,38 @@ var errScanTimeout = errors.New("scan timeout")
 
 func (c *Client) beginMonitoring() error {
 	done := make(chan error, 1)
+	// Closed the moment a device is discovered, which cancels the scan-timeout
+	// watchdog below. Without this the 10s timer keeps running during connect,
+	// so a connect that outlasts the scan window would let errScanTimeout win
+	// the race and mislabel a found-and-connecting device as
+	// FailureNotFound/StatusFailed. sync.Once guards the discovery path: an
+	// adapter may deliver more than one discovery callback, and both a double
+	// close(found) (panic) and a second connect attempt must be avoided.
+	found := make(chan struct{})
+	var foundOnce sync.Once
 
 	c.adapter.Scan(serviceUUID, func(addr string, name string) {
-		c.adapter.StopScan()
-		c.knownAddr = addr
-		go func() {
-			done <- c.connectAndStream(addr)
-		}()
+		foundOnce.Do(func() {
+			c.adapter.StopScan()
+			c.knownAddr = addr
+			close(found)
+			go func() {
+				done <- c.connectAndStream(addr)
+			}()
+		})
 	})
 
-	// Timeout after 10s
+	// Scan-timeout watchdog: report FailureNotFound only if nothing is
+	// discovered within 10s. Discovery closes `found`, which cancels this timer
+	// so an in-progress connect can never be misreported as a scan timeout.
 	go func() {
-		time.Sleep(10 * time.Second)
 		select {
-		case done <- errScanTimeout:
-		default:
+		case <-found:
+		case <-time.After(10 * time.Second):
+			select {
+			case done <- errScanTimeout:
+			default:
+			}
 		}
 	}()
 

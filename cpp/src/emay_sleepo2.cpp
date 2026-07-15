@@ -64,9 +64,12 @@ bool BLEClient::start() {
         impl_->emit("device not found"); return false;
     }
     if (!impl_->peripheral->is_connected()) {
-        // Found the device but the connect attempt did not stick.
+        // Found the device but the connect attempt did not stick. Emit a
+        // distinct status string (not "device not found") so consumers watching
+        // only the status callback aren't told the device was absent when it
+        // was found — matching the structured FailureReason::ConnectionFailed.
         impl_->failure_reason = FailureReason::ConnectionFailed;
-        impl_->emit("device not found"); return false;
+        impl_->emit("connection failed"); return false;
     }
 
     // Discover and subscribe
