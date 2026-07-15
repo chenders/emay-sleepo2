@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>GroundEffectSoftware.EMAYSleepO2</RootNamespace>
+    <AssemblyName>EMAYSleepO2</AssemblyName>
+    <Version>1.0.6</Version>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+</Project>
