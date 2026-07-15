@@ -5,7 +5,8 @@ use std::time::Duration;
 use btleplug::api::{Central, Manager as _, Peripheral as _, ScanFilter, WriteType};
 use btleplug::platform::{Adapter, Manager, Peripheral};
 use futures::StreamExt;
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, Notify};
+use tokio::task::JoinHandle;
 use tokio::time;
 use uuid::Uuid;
 
@@ -20,6 +21,7 @@ pub type MinuteCallback = Arc<dyn Fn(Vec<MinuteSample>) + Send + Sync>;
 pub struct EMAYClient {
     adapter: Adapter,
     status: Arc<Mutex<Status>>,
+    #[allow(dead_code)]
     latest_reading: Arc<Mutex<Option<Reading>>>,
 
     // Callbacks
@@ -27,8 +29,15 @@ pub struct EMAYClient {
     on_status: Arc<Mutex<Option<StatusCallback>>>,
     on_minute_samples: Arc<Mutex<Option<MinuteCallback>>>,
 
+    // Heartbeat task + its cooperative shutdown signal. stop() must join the
+    // task to completion before disconnecting so no heartbeat write is
+    // in-flight racing teardown (see stop()).
+    heartbeat: Arc<Mutex<Option<JoinHandle<()>>>>,
+    shutdown: Arc<Notify>,
+
     // Configuration
     heartbeat_interval: Duration,
+    #[allow(dead_code)]
     stale_timeout: Duration,
     #[allow(dead_code)]
     auto_reconnect: bool,
@@ -52,6 +61,8 @@ impl EMAYClient {
             on_reading: Arc::new(Mutex::new(None)),
             on_status: Arc::new(Mutex::new(None)),
             on_minute_samples: Arc::new(Mutex::new(None)),
+            heartbeat: Arc::new(Mutex::new(None)),
+            shutdown: Arc::new(Notify::new()),
             heartbeat_interval: Duration::from_millis(1500),
             stale_timeout: Duration::from_secs(4),
             auto_reconnect: true,
@@ -84,7 +95,21 @@ impl EMAYClient {
 
     pub async fn stop(&self) -> Result<(), String> {
         self.adapter.stop_scan().await.ok();
-        // Find and disconnect all connected peripherals
+
+        // Quiesce the heartbeat FIRST: set Idle (the loop's stop condition),
+        // wake it, then join it to completion. Otherwise a heartbeat
+        // write-with-response can still be in-flight when we disconnect below;
+        // its orphaned response wedges disconnect() forever and the BLE link is
+        // never dropped (the device "stays connected"). Bounded so a stuck task
+        // can't hang stop() either.
+        *self.status.lock().await = Status::Idle;
+        self.shutdown.notify_waiters();
+        if let Some(handle) = self.heartbeat.lock().await.take() {
+            let _ = time::timeout(Duration::from_secs(3), handle).await;
+        }
+
+        // Disconnect all connected peripherals, each bounded so a wedged backend
+        // cannot hang stop() indefinitely.
         let peripherals = self
             .adapter
             .peripherals()
@@ -92,10 +117,9 @@ impl EMAYClient {
             .map_err(|e| format!("{e}"))?;
         for p in peripherals {
             if p.is_connected().await.unwrap_or(false) {
-                p.disconnect().await.ok();
+                let _ = time::timeout(Duration::from_secs(5), p.disconnect()).await;
             }
         }
-        *self.status.lock().await = Status::Idle;
         Ok(())
     }
 
@@ -213,23 +237,29 @@ impl EMAYClient {
         write_char: btleplug::api::Characteristic,
     ) -> Result<(), String> {
         let status = self.status.clone();
-        let _latest = self.latest_reading.clone();
-        let _stale = self.stale_timeout;
         let interval = self.heartbeat_interval;
-        let _downsampler = Arc::new(Mutex::new(LiveDownsampler::new()));
+        let shutdown = self.shutdown.clone();
 
-        tokio::spawn(async move {
+        let handle = tokio::spawn(async move {
             loop {
-                time::sleep(interval).await;
-                if *status.blocking_lock() != Status::Streaming {
+                // Wake either on the interval or immediately when stop() signals.
+                tokio::select! {
+                    _ = shutdown.notified() => break,
+                    _ = time::sleep(interval) => {}
+                }
+                if *status.lock().await != Status::Streaming {
                     break;
                 }
-                peripheral
-                    .write(&write_char, &HEARTBEAT, WriteType::WithResponse)
-                    .await
-                    .ok();
+                // Bound the write so a lost write-response can't wedge this task
+                // (and thus the join in stop()) forever.
+                let _ = time::timeout(
+                    Duration::from_secs(2),
+                    peripheral.write(&write_char, &HEARTBEAT, WriteType::WithResponse),
+                )
+                .await;
             }
         });
+        *self.heartbeat.lock().await = Some(handle);
 
         Ok(())
     }

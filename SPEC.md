@@ -149,10 +149,47 @@ Every binding models the connection as a small state machine: `Idle`,
   <img src="diagrams/state-lifecycle.svg" alt="Client connection lifecycle: Idle to Scanning to Connecting to Streaming, looping back to Idle on stop(), with Scanning, Connecting, and Streaming each able to fall to Failed" width="660">
 </p>
 
-This state machine is the same shape across all six language bindings
+This state machine is the same shape across every language binding
 (`Status` / `EMAYStatus` enum) — per-binding reconnect behavior (e.g. an
 optional auto-reconnect flag) sits on top of this core machine and isn't
 part of the protocol-level contract.
+
+### Teardown ordering (`Streaming → Idle`)
+
+The heartbeat and the teardown both write to the **same** write
+characteristic (`FF01`), and the heartbeat uses a *write-with-response*. This
+creates an ordering requirement that any concurrent binding **must** honor:
+
+> **Quiesce the heartbeat — cancel it *and* wait for it to fully finish — before
+> issuing `stopRealtime` or disconnecting.**
+
+If a heartbeat write is still in flight when its task/goroutine/timer is
+cancelled *without being joined*, its pending write-response is orphaned in the
+BLE backend. The next write-with-response (`stopRealtime`) — or the disconnect —
+then waits for an acknowledgement that never arrives, and `stop()` **hangs
+forever**. The BLE link is never dropped, so the peripheral keeps reporting the
+central as connected (it "stays connected"), which also blocks the single-
+central device from being reused. This was observed on real hardware failing
+roughly **15%** of teardowns until the heartbeat was joined first.
+
+Two defenses, in order of importance:
+
+1. **Join before teardown (required).** Stop the heartbeat and *await its
+   completion* before the first teardown write. In practice: `await` the task
+   (Python/Rust/C#), `WaitGroup.Wait` the goroutine (Go), `cancelAndJoin` the
+   job (Kotlin), `join()` the thread (C++), or await the in-flight write promise
+   (Node) — then, and only then, send `stopRealtime` and disconnect.
+2. **Bound teardown with timeouts (defense-in-depth).** Wrap the teardown write
+   and the disconnect in a timeout so that even an unexpected backend stall can
+   never hang `stop()` — it logs and proceeds, dropping the link.
+
+Bindings whose BLE API delivers write completions via a **non-blocking
+callback** rather than an awaited result (Apple CoreBluetooth, Android
+`BluetoothGatt`) cannot hit the *hang*, because nothing in teardown awaits a
+write-response. They should still cancel the heartbeat before the `stopRealtime`
+write, otherwise that write can collide with an in-flight heartbeat and be
+silently dropped (the device is never cleanly told to stop; it falls back to
+the ~3–4 s no-heartbeat timeout instead).
 
 ## Data Frame Format
 

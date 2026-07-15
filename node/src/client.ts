@@ -162,6 +162,7 @@ export class EMAYClient extends EventEmitter {
   private writeChar: BLECharacteristic | null = null;
   private notifyChar: BLECharacteristic | null = null;
   private heartbeatTimer: NodeJS.Timeout | null = null;
+  private heartbeatWrite: Promise<void> | null = null;
   private wantScan = false;
   private lastReadingAt: Date | null = null;
   private downsampler = new LiveDownsampler();
@@ -208,18 +209,45 @@ export class EMAYClient extends EventEmitter {
       clearInterval(this.heartbeatTimer);
       this.heartbeatTimer = null;
     }
+    // Let any in-flight heartbeat write settle BEFORE issuing teardown writes.
+    // clearInterval only stops future ticks; a heartbeat write already awaiting
+    // its response is still pending. If we issue STOP_REALTIME on the same
+    // characteristic while that response is orphaned, the teardown write (or
+    // disconnect) never resolves — stop() hangs and the BLE link is never
+    // dropped (the device "stays connected").
+    if (this.heartbeatWrite) {
+      await this.settle(this.heartbeatWrite, 1000);
+    }
+    // Bound the teardown write + disconnect. Empty catch blocks are NOT enough:
+    // a hung promise never rejects, so only a timeout can unblock us.
     if (this.writeChar && this.peripheral) {
-      try {
-        await this.writeChar.write(STOP_REALTIME);
-      } catch {}
+      await this.settle(this.writeChar.write(STOP_REALTIME), 2000);
     }
     if (this.peripheral) {
-      try {
-        await this.peripheral.disconnect();
-      } catch {}
+      await this.settle(this.peripheral.disconnect(), 5000);
     }
     this.resetConnectionState();
     this.status = Status.Idle;
+  }
+
+  /**
+   * Resolve when `p` settles (fulfilled OR rejected) or after `ms`, whichever
+   * comes first. Never throws — a rejection or a timeout both resolve void, so
+   * teardown can proceed regardless of how the underlying BLE op ends.
+   */
+  private async settle(p: Promise<unknown>, ms: number): Promise<void> {
+    let timer: NodeJS.Timeout | undefined;
+    const timeout = new Promise<void>((resolve) => {
+      timer = setTimeout(resolve, ms);
+    });
+    await Promise.race([
+      p.then(
+        () => {},
+        () => {},
+      ),
+      timeout,
+    ]);
+    if (timer) clearTimeout(timer);
   }
 
   private async beginMonitoring(): Promise<void> {
@@ -327,9 +355,15 @@ export class EMAYClient extends EventEmitter {
     if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
     this.heartbeatTimer = setInterval(async () => {
       if (this._status !== Status.Streaming || !this.writeChar) return;
+      const wc = this.writeChar;
+      // Track the in-flight write so stop() can await it before teardown.
+      this.heartbeatWrite = wc.write(HEARTBEAT);
       try {
-        await this.writeChar.write(HEARTBEAT);
-      } catch {}
+        await this.heartbeatWrite;
+      } catch {
+      } finally {
+        this.heartbeatWrite = null;
+      }
       if (
         this.lastReadingAt &&
         Date.now() - this.lastReadingAt.getTime() > this.staleTimeout * 1000
@@ -345,6 +379,7 @@ export class EMAYClient extends EventEmitter {
       clearInterval(this.heartbeatTimer);
       this.heartbeatTimer = null;
     }
+    this.heartbeatWrite = null;
     this.peripheral = null;
     this.writeChar = null;
     this.notifyChar = null;
