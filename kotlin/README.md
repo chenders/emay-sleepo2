@@ -1,14 +1,14 @@
 # EMAY SleepO2 BLE SDK — Kotlin (Android)
 
-> Android BLE client and CSV parser for the EMAY SleepO2 pulse oximeter's
-> real-time Bluetooth streaming protocol. Read SpO₂ and pulse rate at 1 Hz
-> from a $30 consumer device.
+> Android BLE client for the EMAY SleepO2 pulse oximeter's real-time
+> Bluetooth streaming protocol. Read SpO₂ and pulse rate at 1 Hz from a
+> $30 consumer device.
 
 This is the Kotlin/Android package of the multi-language EMAY SleepO2 SDK.
 For the other bindings (Swift, Python, Node.js, Rust, Go) see the
 [repository README](https://github.com/chenders/emay-sleepo2#readme). The
 reverse-engineered protocol is documented in
-[spec.md](https://github.com/chenders/emay-sleepo2/blob/main/spec.md).
+[SPEC.md](https://github.com/chenders/emay-sleepo2/blob/main/SPEC.md).
 
 ## Installation
 
@@ -67,24 +67,6 @@ surface:
 
 `reading.spo2` and `reading.pulse` are nullable `Int?`: `null` means the
 sensor couldn't acquire that measurement (finger off), **not** zero.
-
-## CSV Parsing (no BLE required)
-
-The EMAY app exports session CSVs. Parsing needs no BLE hardware or
-permissions:
-
-```kotlin
-import com.groundeffectsoftware.com.emaysleepo2.parseCSVFile
-
-val result = parseCSVFile("/path/to/session.csv")
-println("${result.readings.size} readings, ${result.warnings.size} warnings")
-```
-
-`parseCSV(content, timeZone, correctDST)` accepts raw CSV text; both return
-a `CSVResult`. Malformed rows become warnings — parsing throws only when
-the CSV has no data rows, and `parseCSVFile` also throws when the file
-can't be read. DST fold correction disambiguates timestamps recorded
-during the repeated fall-back hour.
 
 ## Protocol Layer
 

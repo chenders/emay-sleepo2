@@ -55,7 +55,7 @@ publishing {
 
             pom {
                 name.set("EMAY SleepO2 BLE SDK")
-                description.set("Android BLE client and CSV parser for the EMAY SleepO2 pulse oximeter")
+                description.set("Android BLE client for the EMAY SleepO2 pulse oximeter")
                 url.set("https://github.com/chenders/emay-sleepo2")
                 licenses {
                     license {

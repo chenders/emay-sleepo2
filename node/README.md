@@ -1,14 +1,14 @@
 # EMAY SleepO2 BLE SDK — Node.js
 
-> Node.js/TypeScript BLE client and CSV parser for the EMAY SleepO2 pulse
-> oximeter's real-time Bluetooth streaming protocol. Read SpO₂ and pulse
-> rate at 1 Hz from a $30 consumer device.
+> Node.js/TypeScript BLE client for the EMAY SleepO2 pulse oximeter's
+> real-time Bluetooth streaming protocol. Read SpO₂ and pulse rate at 1 Hz
+> from a $30 consumer device.
 
 This is the Node.js package of the multi-language EMAY SleepO2 SDK. For the
 other bindings (Swift, Python, Rust, Go, Kotlin) see the
 [repository README](https://github.com/chenders/emay-sleepo2#readme). The
 reverse-engineered protocol is documented in
-[spec.md](https://github.com/chenders/emay-sleepo2/blob/main/spec.md).
+[SPEC.md](https://github.com/chenders/emay-sleepo2/blob/main/SPEC.md).
 
 ## Installation
 
@@ -19,7 +19,7 @@ npm install @groundeffect/emay-sleepo2
 npm install @abandonware/noble
 ```
 
-CSV parsing and the protocol layer have no dependencies —
+The protocol layer has no dependencies —
 [noble](https://github.com/abandonware/noble) is only needed for live
 streaming, and works on macOS, Linux, Windows, and Raspberry Pi. The
 package is ESM-only and ships TypeScript type declarations.
@@ -56,22 +56,6 @@ command. Useful surface:
 
 `reading.spo2` and `reading.pulse` are nullable: `null` means the sensor
 couldn't acquire that measurement (finger off), **not** zero.
-
-## CSV Parsing (no BLE required)
-
-The EMAY app exports session CSVs. Parse them without installing noble:
-
-```js
-import { parseCSVFile } from "@groundeffect/emay-sleepo2";
-
-const { readings, warnings } = parseCSVFile("session.csv");
-```
-
-`parseCSV(content, timezoneOffset?, correctDSTFold = true)` accepts raw CSV
-text; both return a `CSVResult`. Malformed rows become warnings — the
-parsers throw only when the CSV has no data rows, and `parseCSVFile` also
-throws when the file can't be read. DST fold correction disambiguates
-timestamps recorded during the repeated fall-back hour.
 
 ## Protocol Layer
 
