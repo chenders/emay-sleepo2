@@ -29,12 +29,15 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 requires-python = ">=3.10"
-dependencies = []
+dependencies = ["bleak>=0.22"]
 
 [project.optional-dependencies]
-ble = ["bleak>=0.22"]
+# bleak is a core dependency now, so `pip install emay-sleepo2` gives you BLE
+# streaming out of the box. The `ble` extra is kept as a no-op alias so any
+# existing `pip install emay-sleepo2[ble]` command keeps working.
+ble = []
 dev = ["pytest", "ruff"]
-all = ["bleak>=0.22", "pytest", "ruff"]
+all = ["pytest", "ruff"]
 
 [project.urls]
 Homepage = "https://github.com/chenders/emay-sleepo2"

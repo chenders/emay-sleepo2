@@ -34,7 +34,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install
-        run: pip install -e ".[ble]"
+        run: pip install -e .   # bleak is a core dependency now — no extra needed
       - name: Lint (ruff)
         run: pip install ruff && ruff check src/ tests/
       - name: Test

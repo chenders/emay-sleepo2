@@ -59,6 +59,11 @@ surface:
 - `set_on_minute_samples(...)` — receive finalized per-minute mean
   `MinuteSample` values from the built-in `LiveDownsampler`.
 - `status().await` — current state.
+- `failure_reason().await` — best-effort `FailureReason`
+  (`NotFound` / `ConnectionFailed`, each with `.message()`) explaining a
+  failed session. `NotFound` can't distinguish "connected to another app"
+  from "off / out of range". (Rust scans indefinitely, so `NotFound` is
+  currently only produced by other bindings.)
 
 `Reading::spo2` and `Reading::pulse` are `Option<u8>`: `None` means the
 sensor couldn't acquire that measurement (finger off), **not** zero.

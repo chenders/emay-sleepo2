@@ -64,6 +64,10 @@ surface:
   `MinuteSample` values from the built-in `EMAYLiveDownsampler`.
 - `emay.isStreaming` / `emay.latestReading` — current state and last
   reading.
+- `emay.failureReason` — best-effort `FailureReason` (`NotFound` /
+  `ConnectionFailed`, each with `.message`) explaining a `Failed` status.
+  `NotFound` can't distinguish "connected to another app" from "off / out
+  of range".
 
 `reading.spo2` and `reading.pulse` are nullable `Int?`: `null` means the
 sensor couldn't acquire that measurement (finger off), **not** zero.

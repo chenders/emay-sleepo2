@@ -3,7 +3,7 @@
  */
 
 import { EventEmitter } from "events";
-import { Reading, MinuteSample, Status } from "./types.js";
+import { Reading, MinuteSample, Status, FailureReason } from "./types.js";
 import {
   SERVICE_UUID,
   WRITE_UUID,
@@ -157,6 +157,7 @@ export class EMAYClient extends EventEmitter {
 
   private adapter: BLEAdapter;
   private _status: Status = Status.Idle;
+  private _failureReason: FailureReason = FailureReason.None;
   private _latestReading: Reading | null = null;
   private peripheral: BLEPeripheral | null = null;
   private writeChar: BLECharacteristic | null = null;
@@ -183,6 +184,18 @@ export class EMAYClient extends EventEmitter {
     }
   }
 
+  /**
+   * Best-effort reason for the most recent {@link Status.Failed} transition.
+   *
+   * `FailureReason.NotFound` means the device was never discovered — off, out
+   * of range, or held by another app. `FailureReason.ConnectionFailed` means it
+   * was found but connecting or GATT setup failed. Reset to `FailureReason.None`
+   * at the start of {@link start}. See `failureReasonMessage` for user-facing text.
+   */
+  get failureReason(): FailureReason {
+    return this._failureReason;
+  }
+
   get latestReading(): Reading | null {
     return this._latestReading;
   }
@@ -197,6 +210,7 @@ export class EMAYClient extends EventEmitter {
       this._status === Status.Streaming
     )
       return;
+    this._failureReason = FailureReason.None;
     this.wantScan = true;
     if (address) this.knownAddress = address;
     this.status = Status.Scanning;
@@ -289,6 +303,7 @@ export class EMAYClient extends EventEmitter {
       setTimeout(() => {
         if (!resolved) {
           this.adapter.stopScanning();
+          this._failureReason = FailureReason.NotFound;
           this.status = Status.Failed;
           resolve();
         }
@@ -305,6 +320,7 @@ export class EMAYClient extends EventEmitter {
       const services = await peripheral.discoverServices();
       const svc = services.find((s: any) => s.uuid.includes(SERVICE_UUID));
       if (!svc) {
+        this._failureReason = FailureReason.ConnectionFailed;
         this.status = Status.Failed;
         return;
       }
@@ -314,6 +330,7 @@ export class EMAYClient extends EventEmitter {
       this.notifyChar =
         chars.find((c: any) => c.uuid.includes(NOTIFY_UUID)) || null;
       if (!this.writeChar || !this.notifyChar) {
+        this._failureReason = FailureReason.ConnectionFailed;
         this.status = Status.Failed;
         return;
       }
@@ -325,6 +342,7 @@ export class EMAYClient extends EventEmitter {
       this.status = Status.Streaming;
       this.startHeartbeat();
     } catch {
+      this._failureReason = FailureReason.ConnectionFailed;
       this.status = Status.Failed;
     }
   }

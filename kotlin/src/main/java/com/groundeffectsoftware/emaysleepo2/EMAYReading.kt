@@ -29,3 +29,21 @@ enum class EMAYStatus {
     val isActive: Boolean
         get() = this == Scanning || this == Connecting || this == Streaming
 }
+
+/**
+ * Best-effort reason the client entered [EMAYStatus.Failed].
+ *
+ * Only meaningful while `status == EMAYStatus.Failed`; otherwise it is [None].
+ * Read it via `EMAYClient.failureReason`.
+ *
+ * Note on [NotFound]: the SleepO2 is single-connection and stops advertising
+ * while connected to another central, so a device that is "connected to another
+ * app" is radio-indistinguishable from one that is off or out of range. We
+ * therefore cannot report a definitive "busy" — the message enumerates the
+ * possibilities honestly.
+ */
+enum class FailureReason(val message: String) {
+    None(""),
+    NotFound("Device not found — it may be off, out of range, or connected to another app (the SleepO2 allows only one connection at a time)."),
+    ConnectionFailed("Found the device but the connection failed — it may have moved out of range or been taken by another app mid-connect.");
+}

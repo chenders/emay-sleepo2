@@ -25,6 +25,23 @@ uint8_t emay_checksum(const uint8_t *p, size_t n);
 uint8_t *emay_command(const uint8_t *p, size_t n, size_t *out);
 int emay_parse_reading(const uint8_t *raw, size_t n, emay_reading_t *out); /* 0=ok */
 
+/* ---- Failure reasons ---- */
+/*
+ * Best-effort reason a BLE session failed, for parity with the Python (and
+ * other) bindings' FailureReason. NOTE: the C BLE layer is currently a stub
+ * (emay_sleepo2_ble.c isn't compiled by the Makefile, and neither it nor the
+ * stubs in emay_sleepo2.c have a real FAILED transition), so there is no site
+ * to set this from — it is exposed for API parity only.
+ */
+typedef enum {
+    EMAY_FAILURE_NONE = 0,
+    EMAY_FAILURE_NOT_FOUND,
+    EMAY_FAILURE_CONNECTION_FAILED
+} emay_failure_reason_t;
+
+/* Human-readable message for a failure reason (never NULL; "" for NONE). */
+const char *emay_failure_reason_message(emay_failure_reason_t r);
+
 /* ---- BLE Client ---- */
 typedef struct emay_ble_s emay_ble_t;
 typedef void (*emay_reading_cb)(const emay_reading_t *r, void *ctx);

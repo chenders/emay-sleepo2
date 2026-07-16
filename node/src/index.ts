@@ -21,4 +21,10 @@ export {
   NOTIFY_UUID,
 } from "./protocol.js";
 export { LiveDownsampler } from "./downsampler.js";
-export { Reading, MinuteSample, Status } from "./types.js";
+export {
+  Reading,
+  MinuteSample,
+  Status,
+  FailureReason,
+  failureReasonMessage,
+} from "./types.js";

@@ -67,12 +67,25 @@ public class EMAYBLEClient {
         void onStatus(String status);
     }
 
+    /** Best-effort reason the client last transitioned to a failed status.
+     *  Meaningful only after a failure; {@link #NONE} at all other times. */
+    public enum FailureReason {
+        NONE(""),
+        NOT_FOUND("Device not found — it may be off, out of range, or connected to another app (the SleepO2 allows only one connection at a time)."),
+        CONNECTION_FAILED("Found the device but the connection failed — it may have moved out of range or been taken by another app mid-connect.");
+
+        private final String message;
+        FailureReason(String message) { this.message = message; }
+        public String message() { return message; }
+    }
+
     private final BluetoothManager mgr;
     private BluetoothGatt gatt;
     private BluetoothGattCharacteristic wrCh, nfyCh;
     private Callback cb;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private volatile boolean streaming;
+    private volatile FailureReason failureReason = FailureReason.NONE;
 
     public EMAYBLEClient(Context ctx) {
         mgr = (BluetoothManager) ctx.getSystemService(Context.BLUETOOTH_SERVICE);
@@ -80,7 +93,11 @@ public class EMAYBLEClient {
 
     public void setCallback(Callback c) { this.cb = c; }
 
+    /** Why the last session failed. Meaningful only after a failure status. */
+    public FailureReason getFailureReason() { return failureReason; }
+
     public void start() {
+        failureReason = FailureReason.NONE;
         var adapter = mgr.getAdapter();
         if (adapter == null) { status("no BT adapter"); return; }
 
@@ -97,6 +114,12 @@ public class EMAYBLEClient {
                 status("connecting");
                 gatt = r.getDevice().connectGatt(ctx, false, gattCallback);
             }
+            // onScanFailed fires when the BLE scanner itself cannot start
+            // (SCAN_FAILED_APPLICATION_REGISTRATION_FAILED, ..._INTERNAL_ERROR,
+            // etc.) — a local stack failure, NOT "scanned and did not find the
+            // device". Tagging it NOT_FOUND would show a misleading hint about
+            // the device being off/out-of-range/busy, so leave failureReason
+            // unclassified and let the status string carry the real cause.
             public void onScanFailed(int e) { status("scan failed: " + e); }
         });
     }
@@ -112,10 +135,10 @@ public class EMAYBLEClient {
         }
         public void onServicesDiscovered(BluetoothGatt g, int s) {
             var svc = g.getService(EMAYProtocol.SVC);
-            if (svc == null) { status("service not found"); return; }
+            if (svc == null) { failureReason = FailureReason.CONNECTION_FAILED; status("service not found"); return; }
             wrCh = svc.getCharacteristic(EMAYProtocol.WR);
             nfyCh = svc.getCharacteristic(EMAYProtocol.NFY);
-            if (wrCh == null || nfyCh == null) { status("characteristics missing"); return; }
+            if (wrCh == null || nfyCh == null) { failureReason = FailureReason.CONNECTION_FAILED; status("characteristics missing"); return; }
             g.setCharacteristicNotification(nfyCh, true);
             var desc = nfyCh.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"));
             if (desc != null) desc.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);

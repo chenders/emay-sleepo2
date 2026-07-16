@@ -53,6 +53,37 @@ public enum EMAYStatus: Equatable, Sendable {
     }
 }
 
+/// Best-effort reason the client entered ``EMAYStatus/failed(_:)``.
+///
+/// Only meaningful while the status is `.failed`; otherwise it is ``none``.
+/// Read it via ``EMAYClient/failureReason``.
+///
+/// Note on ``notFound``: the SleepO2 is single-connection and stops
+/// advertising while connected to another central, so a device that is
+/// "connected to another app" is radio-indistinguishable from one that is off
+/// or out of range. We therefore cannot report a definitive "busy" — the
+/// message enumerates the possibilities honestly.
+public enum FailureReason: Equatable, Sendable {
+    /// No failure (default).
+    case none
+    /// The device was never discovered — off, out of range, or connected to another app.
+    case notFound
+    /// The device was found but connecting or GATT setup failed.
+    case connectionFailed
+
+    /// A human-readable explanation suitable for showing a user.
+    public var message: String {
+        switch self {
+        case .none:
+            return ""
+        case .notFound:
+            return "Device not found — it may be off, out of range, or connected to another app (the SleepO2 allows only one connection at a time)."
+        case .connectionFailed:
+            return "Found the device but the connection failed — it may have moved out of range or been taken by another app mid-connect."
+        }
+    }
+}
+
 // MARK: - BLE Protocol Constants
 
 /// Pure-protocol layer for the EMAY SleepO2 BLE protocol.

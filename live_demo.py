@@ -3,7 +3,7 @@
 
 Make sure your EMAY SleepO2 is on and nearby, then run:
 
-    pip install emay-sleepo2[ble]
+    pip install emay-sleepo2
     python live_demo.py
 
 Press Ctrl-C to quit cleanly.
@@ -21,6 +21,7 @@ try:
     from emay_sleepo2 import EMAYClient, Status
 except ImportError:
     import os
+
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), "python", "src"))
     from emay_sleepo2 import EMAYClient, Status
 
@@ -29,6 +30,7 @@ except ImportError:
 # helpers
 # ---------------------------------------------------------------------------
 
+
 def ts() -> str:
     """Current time as HH:MM:SS."""
     return datetime.now().strftime("%H:%M:%S")
@@ -36,7 +38,9 @@ def ts() -> str:
 
 def hr(bpm: int | None) -> str:
     """Pretty-print a heart rate value (None → '--')."""
-    return f"\033[91m{bpm:>3}\033[0m bpm" if bpm is not None else "\033[90m --\033[0m bpm"
+    return (
+        f"\033[91m{bpm:>3}\033[0m bpm" if bpm is not None else "\033[90m --\033[0m bpm"
+    )
 
 
 def spo2(pct: int | None) -> str:
@@ -45,38 +49,30 @@ def spo2(pct: int | None) -> str:
 
 
 # ANSI colours
-BOLD   = "\033[1m"
-DIM    = "\033[2m"
-GREEN  = "\033[32m"
+BOLD = "\033[1m"
+DIM = "\033[2m"
+GREEN = "\033[32m"
 YELLOW = "\033[33m"
-CYAN   = "\033[36m"
-RESET  = "\033[0m"
+CYAN = "\033[36m"
+RESET = "\033[0m"
 
 
 # ---------------------------------------------------------------------------
 # callbacks
 # ---------------------------------------------------------------------------
 
-def on_status(status: Status) -> None:
-    """Called every time the connection state changes."""
-    emoji = {
-        Status.IDLE: "💤", Status.SCANNING: "🔍",
-        Status.CONNECTING: "🔗", Status.STREAMING: "📡",
-        Status.FAILED: "❌",
-    }
-    e = emoji.get(status, "")
-    label = status.name.capitalize()
-    print(f"{DIM}[{ts()}]{RESET} {e} {BOLD}{GREEN}{label}{RESET}")
-
 
 def on_reading(reading) -> None:
     """Called ~1×/second while streaming."""
-    print(f"{DIM}[{ts()}]{RESET}  SpO₂ {spo2(reading.spo2)}   │   HR {hr(reading.pulse)}")
+    print(
+        f"{DIM}[{ts()}]{RESET}  SpO₂ {spo2(reading.spo2)}   │   HR {hr(reading.pulse)}"
+    )
 
 
 # ---------------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------------
+
 
 def setup_logging() -> None:
     """Surface the SDK's own log messages (INFO+) while keeping bleak quiet.
@@ -102,6 +98,24 @@ async def main() -> None:
     setup_logging()
 
     client = EMAYClient()
+
+    def on_status(status: Status) -> None:
+        """Print each state change; on FAILED, add the best-effort reason hint."""
+        emoji = {
+            Status.IDLE: "💤",
+            Status.SCANNING: "🔍",
+            Status.CONNECTING: "🔗",
+            Status.STREAMING: "📡",
+            Status.FAILED: "❌",
+        }
+        e = emoji.get(status, "")
+        label = status.name.capitalize()
+        print(f"{DIM}[{ts()}]{RESET} {e} {BOLD}{GREEN}{label}{RESET}")
+        if status == Status.FAILED and client.failure_reason.message:
+            print(
+                f"{DIM}[{ts()}]{RESET}    ↳ {YELLOW}{client.failure_reason.message}{RESET}"
+            )
+
     client.on_status_change = on_status
     client.on_reading = on_reading
 

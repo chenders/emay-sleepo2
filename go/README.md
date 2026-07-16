@@ -72,6 +72,10 @@ and keeps the stream alive with a heartbeat command. Useful surface:
   values from the built-in `LiveDownsampler`.
 - `client.Status()` / `client.LatestReading()` / `client.IsStreaming()` —
   current state and last reading.
+- `client.FailureReason()` — best-effort `FailureReason`
+  (`FailureNotFound` / `FailureConnectionFailed`, each with `.Message()`)
+  explaining a `StatusFailed`. `FailureNotFound` can't distinguish
+  "connected to another app" from "off / out of range".
 
 `Reading.SpO2` and `Reading.Pulse` are `*int`: `nil` means the sensor
 couldn't acquire that measurement (finger off), **not** zero.
