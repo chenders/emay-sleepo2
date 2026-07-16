@@ -20,17 +20,17 @@ Review and respond to GitHub Copilot review comments on a pull request. Loops un
 
    **Endpoint A — PR-level comments** (inline diff comments):
    ```bash
-   gh api --paginate repos/chenders/AnxietyWatch/pulls/{pr_number}/comments --jq '.[] | {id, body, path, line}'
+   gh api --paginate repos/chenders/emay-sleepo2/pulls/{pr_number}/comments --jq '.[] | {id, body, path, line}'
    ```
 
    **Endpoint B — Review-attached comments** (comments posted as part of a review):
    ```bash
    # First get all review IDs from Copilot
-   REVIEW_IDS=$(gh api --paginate repos/chenders/AnxietyWatch/pulls/{pr_number}/reviews --jq '.[] | select(.user.login == "copilot-pull-request-reviewer[bot]") | .id')
+   REVIEW_IDS=$(gh api --paginate repos/chenders/emay-sleepo2/pulls/{pr_number}/reviews --jq '.[] | select(.user.login == "copilot-pull-request-reviewer[bot]") | .id')
 
    # Then fetch comments for each review
    for rid in $REVIEW_IDS; do
-     gh api --paginate repos/chenders/AnxietyWatch/pulls/{pr_number}/reviews/$rid/comments --jq '.[] | {id, body, path, line}'
+     gh api --paginate repos/chenders/emay-sleepo2/pulls/{pr_number}/reviews/$rid/comments --jq '.[] | {id, body, path, line}'
    done
    ```
 
@@ -53,14 +53,14 @@ Review and respond to GitHub Copilot review comments on a pull request. Loops un
 7. **Reply to each comment**
 
    ```bash
-   gh api -X POST repos/chenders/AnxietyWatch/pulls/{pr_number}/comments/{id}/replies -f body="Fixed in $(git rev-parse --short HEAD). Explanation."
+   gh api -X POST repos/chenders/emay-sleepo2/pulls/{pr_number}/comments/{id}/replies -f body="Fixed in $(git rev-parse --short HEAD). Explanation."
    ```
 
 8. **Resolve implemented threads** (use PRRT* thread IDs, not PRRC* comment IDs)
 
    ```bash
    # Get thread IDs
-   gh api graphql -f query='query { repository(owner: "chenders", name: "AnxietyWatch") { pullRequest(number: {pr_number}) { reviewThreads(first: 50) { nodes { id isResolved comments(first: 1) { nodes { body } } } } } } }'
+   gh api graphql -f query='query { repository(owner: "chenders", name: "emay-sleepo2") { pullRequest(number: {pr_number}) { reviewThreads(first: 50) { nodes { id isResolved comments(first: 1) { nodes { body } } } } } } }'
 
    # Resolve
    gh api graphql -f query='mutation { resolveReviewThread(input: {threadId: "PRRT_..."}) { thread { isResolved } } }'
@@ -74,16 +74,16 @@ Review and respond to GitHub Copilot review comments on a pull request. Loops un
 
    ```bash
    # Capture baseline FIRST — filter to Copilot reviews only and paginate
-   BEFORE_COUNT=$(gh api --paginate repos/chenders/AnxietyWatch/pulls/{pr_number}/reviews --jq '.[] | select(.user.login == "copilot-pull-request-reviewer[bot]") | .id' | wc -l | tr -d ' ')
+   BEFORE_COUNT=$(gh api --paginate repos/chenders/emay-sleepo2/pulls/{pr_number}/reviews --jq '.[] | select(.user.login == "copilot-pull-request-reviewer[bot]") | .id' | wc -l | tr -d ' ')
 
    # Then re-request
-   gh api repos/chenders/AnxietyWatch/pulls/{pr_number}/requested_reviewers -X POST -f 'reviewers[]=copilot-pull-request-reviewer[bot]'
+   gh api repos/chenders/emay-sleepo2/pulls/{pr_number}/requested_reviewers -X POST -f 'reviewers[]=copilot-pull-request-reviewer[bot]'
    ```
 
 10. **Wait for the new review** — Poll until Copilot review count exceeds `BEFORE_COUNT`:
 
     ```bash
-    gh api --paginate repos/chenders/AnxietyWatch/pulls/{pr_number}/reviews --jq '[.[] | select(.user.login == "copilot-pull-request-reviewer[bot]")] | length'
+    gh api --paginate repos/chenders/emay-sleepo2/pulls/{pr_number}/reviews --jq '[.[] | select(.user.login == "copilot-pull-request-reviewer[bot]")] | length'
     ```
 
     Poll every 15 seconds. Timeout after 10 minutes (assume review is delayed).
