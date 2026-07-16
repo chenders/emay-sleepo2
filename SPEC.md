@@ -154,13 +154,39 @@ This state machine is the same shape across every language binding
 optional auto-reconnect flag) sits on top of this core machine and isn't
 part of the protocol-level contract.
 
+### Failure reasons (`Failed`)
+
+`Failed` is deliberately coarse — the state machine stays identical across
+bindings. Each binding pairs it with a **best-effort `FailureReason`** so a
+caller can tell *why* a session failed without changing the state machine or any
+callback signature: read it (`failure_reason` / `FailureReason()` /
+`failureReason`, per binding) when the status is `Failed`.
+
+| Reason | When |
+|--------|------|
+| `NONE` | Not in a failed state. |
+| `NOT_FOUND` | Scan finished without discovering the device. |
+| `CONNECTION_FAILED` | The device was found, but connecting or GATT service/characteristic discovery failed. |
+
+`NOT_FOUND` is intentionally a *hint*, not a verdict. The SleepO2 is
+single-connection and **stops advertising while connected to another central**,
+so a device that is busy with another app is radio-indistinguishable from one
+that is off or out of range — all three produce no advertisement and a connect
+that simply times out. There is no in-band "busy" signal to observe: BLE
+connection setup is advertisement-gated, so a non-advertising device never
+receives the connection request and emits nothing in response. The reason's
+message therefore enumerates the possibilities honestly ("off, out of range, or
+connected to another app") rather than claiming a definitive "busy".
+Distinguishing "busy" for certain would require an external over-the-air sniffer
+(e.g. an nRF52840 running nRF Sniffer) and is out of scope for the SDK.
+
 ### Teardown ordering (`Streaming → Idle`)
 
 The heartbeat and the teardown both write to the **same** write
 characteristic (`FF01`), and the heartbeat uses a *write-with-response*. This
 creates an ordering requirement that any concurrent binding **must** honor:
 
-> **Quiesce the heartbeat — cancel it *and* wait for it to fully finish — before
+> **Stop the heartbeat — cancel it *and* wait for it to fully finish — before
 > issuing `stopRealtime` or disconnecting.**
 
 If a heartbeat write is still in flight when its task/goroutine/timer is

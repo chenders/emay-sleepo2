@@ -1,6 +1,6 @@
 """EMAY SleepO2 BLE SDK — Python."""
 
-from .types import Reading, MinuteSample, Status
+from .types import Reading, MinuteSample, Status, FailureReason
 from .protocol import (
     parse_reading,
     checksum,
@@ -28,6 +28,7 @@ __all__ = [
     "Reading",
     "MinuteSample",
     "Status",
+    "FailureReason",
     "LiveDownsampler",
     "parse_reading",
     "checksum",

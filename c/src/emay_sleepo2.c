@@ -27,6 +27,17 @@ int emay_parse_reading(const uint8_t *raw, size_t n, emay_reading_t *out) {
     out->spo2=spo2; out->pulse=pulse; out->timestamp_secs=(double)time(NULL);
     return 0;
 }
+const char *emay_failure_reason_message(emay_failure_reason_t r) {
+    switch (r) {
+        case EMAY_FAILURE_NOT_FOUND:
+            return "Device not found — it may be off, out of range, or connected to another app (the SleepO2 allows only one connection at a time).";
+        case EMAY_FAILURE_CONNECTION_FAILED:
+            return "Found the device but the connection failed — it may have moved out of range or been taken by another app mid-connect.";
+        case EMAY_FAILURE_NONE:
+        default:
+            return "";
+    }
+}
 /* BLE client stubs (full implementation in emay_sleepo2_ble.c) */
 emay_ble_t *emay_ble_create(void) { return NULL; }
 void emay_ble_free(emay_ble_t *b) { (void)b; }

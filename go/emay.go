@@ -66,6 +66,28 @@ func (s Status) IsActive() bool {
 	return s == StatusScanning || s == StatusConnecting || s == StatusStreaming
 }
 
+// FailureReason explains why a session transitioned to StatusFailed.
+type FailureReason int
+
+const (
+	FailureNone FailureReason = iota
+	FailureNotFound
+	FailureConnectionFailed
+)
+
+// Message returns a human-readable explanation of the failure reason.
+// FailureNone returns the empty string.
+func (r FailureReason) Message() string {
+	switch r {
+	case FailureNotFound:
+		return "Device not found — it may be off, out of range, or connected to another app (the SleepO2 allows only one connection at a time)."
+	case FailureConnectionFailed:
+		return "Found the device but the connection failed — it may have moved out of range or been taken by another app mid-connect."
+	default:
+		return ""
+	}
+}
+
 // ---- BLE Adapter Interface ----
 
 // BLEAdapter abstracts platform-specific BLE operations.
@@ -102,6 +124,7 @@ type BLECharacteristic interface {
 type Client struct {
 	adapter       BLEAdapter
 	status        Status
+	failureReason FailureReason
 	OnReading     func(Reading)
 	OnStatus      func(Status)
 	OnMinute      func([]MinuteSample)
@@ -135,6 +158,10 @@ func NewClient(adapter BLEAdapter) *Client {
 // Status returns the current connection state.
 func (c *Client) Status() Status { return c.status }
 
+// FailureReason returns why the last session failed. It is FailureNone unless
+// the status is (or most recently was) StatusFailed.
+func (c *Client) FailureReason() FailureReason { return c.failureReason }
+
 func (c *Client) setStatus(s Status) {
 	if c.status != s {
 		c.status = s
@@ -156,6 +183,7 @@ func (c *Client) Start(addr string) error {
 	if c.status.IsActive() {
 		return nil
 	}
+	c.failureReason = FailureNone
 	c.wantScan = true
 	if addr != "" {
 		c.knownAddr = addr
@@ -219,33 +247,70 @@ func withTimeout(d time.Duration, fn func()) {
 	}
 }
 
+// errScanTimeout is produced when the 10s scan window elapses with no device
+// discovered. It is a sentinel so the not-found path can be identified via
+// errors.Is without matching on the error string.
+var errScanTimeout = errors.New("scan timeout")
+
 func (c *Client) beginMonitoring() error {
 	done := make(chan error, 1)
+	// Closed the moment a device is discovered, which cancels the scan-timeout
+	// watchdog below. Without this the 10s timer keeps running during connect,
+	// so a connect that outlasts the scan window would let errScanTimeout win
+	// the race and mislabel a found-and-connecting device as
+	// FailureNotFound/StatusFailed. sync.Once guards the discovery path: an
+	// adapter may deliver more than one discovery callback, and both a double
+	// close(found) (panic) and a second connect attempt must be avoided.
+	found := make(chan struct{})
+	var foundOnce sync.Once
 
 	c.adapter.Scan(serviceUUID, func(addr string, name string) {
-		c.adapter.StopScan()
-		c.knownAddr = addr
-		go func() {
-			done <- c.connectAndStream(addr)
-		}()
+		foundOnce.Do(func() {
+			c.adapter.StopScan()
+			c.knownAddr = addr
+			close(found)
+			go func() {
+				done <- c.connectAndStream(addr)
+			}()
+		})
 	})
 
-	// Timeout after 10s
+	// Scan-timeout watchdog: report FailureNotFound only if nothing is
+	// discovered within 10s. Discovery closes `found`, which cancels this timer
+	// so an in-progress connect can never be misreported as a scan timeout.
 	go func() {
-		time.Sleep(10 * time.Second)
 		select {
-		case done <- errors.New("scan timeout"):
-		default:
+		case <-found:
+		case <-time.After(10 * time.Second):
+			select {
+			case done <- errScanTimeout:
+			default:
+			}
 		}
 	}()
 
-	return <-done
+	err := <-done
+	// The scan timed out with no device discovered. Record why before the caller
+	// can observe the failure. Setting the reason + status here (in the receiving
+	// goroutine) rather than in the timeout goroutine keeps it race-free: the
+	// send happens-before this receive, and Start's caller only reads after we
+	// return. NOTE: the pre-existing code returned this timeout error while
+	// leaving the status at StatusScanning; to make FailureNotFound observable
+	// (a reason is only meaningful alongside StatusFailed) this now also
+	// transitions to StatusFailed. No Status value, state, or callback signature
+	// changed — only this previously-missing terminal transition was added.
+	if errors.Is(err, errScanTimeout) {
+		c.failureReason = FailureNotFound
+		c.setStatus(StatusFailed)
+	}
+	return err
 }
 
 func (c *Client) connectAndStream(addr string) error {
 	c.setStatus(StatusConnecting)
 	p, err := c.adapter.Connect(addr)
 	if err != nil {
+		c.failureReason = FailureConnectionFailed
 		c.setStatus(StatusFailed)
 		return fmt.Errorf("connect: %w", err)
 	}
@@ -253,6 +318,7 @@ func (c *Client) connectAndStream(addr string) error {
 
 	services, err := p.DiscoverServices()
 	if err != nil {
+		c.failureReason = FailureConnectionFailed
 		c.setStatus(StatusFailed)
 		return fmt.Errorf("discover services: %w", err)
 	}
@@ -276,6 +342,7 @@ func (c *Client) connectAndStream(addr string) error {
 	}
 
 	if c.writeChar == nil || c.notifyChar == nil {
+		c.failureReason = FailureConnectionFailed
 		c.setStatus(StatusFailed)
 		return errors.New("characteristics not found")
 	}
@@ -299,6 +366,7 @@ func (c *Client) connectAndStream(addr string) error {
 	// Serialized start sequence
 	for _, cmd := range startSequence {
 		if err := c.writeChar.Write(cmd); err != nil {
+			c.failureReason = FailureConnectionFailed
 			c.setStatus(StatusFailed)
 			return fmt.Errorf("write: %w", err)
 		}

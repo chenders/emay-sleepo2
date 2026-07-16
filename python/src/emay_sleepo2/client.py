@@ -21,7 +21,7 @@ from .protocol import (
     STOP_REALTIME,
     parse_reading,
 )
-from .types import Reading, Status, MinuteSample
+from .types import Reading, Status, MinuteSample, FailureReason
 from .downsampler import LiveDownsampler
 
 logger = logging.getLogger(__name__)
@@ -63,6 +63,7 @@ class EMAYClient:
 
         # State
         self._status: Status = Status.IDLE
+        self._failure_reason: FailureReason = FailureReason.NONE
         self._latest_reading: Optional[Reading] = None
         self._last_reading_at: Optional[datetime] = None
         self._client: Optional[BleakClient] = None
@@ -90,6 +91,17 @@ class EMAYClient:
         return self._latest_reading
 
     @property
+    def failure_reason(self) -> FailureReason:
+        """Why the last session failed. Meaningful only when status is FAILED.
+
+        ``FailureReason.NOT_FOUND`` means the device was never discovered — off,
+        out of range, or connected to another app (indistinguishable in-band).
+        ``FailureReason.CONNECTION_FAILED`` means it was found but connecting or
+        GATT setup failed. See ``FailureReason.message`` for user-facing text.
+        """
+        return self._failure_reason
+
+    @property
     def is_streaming(self) -> bool:
         return self._status == Status.STREAMING
 
@@ -97,6 +109,7 @@ class EMAYClient:
         """Start monitoring for the oximeter."""
         if self._status.is_active:
             return
+        self._failure_reason = FailureReason.NONE
         self._want_scan = True
         self._known_address = address or self._known_address
         self.status = Status.SCANNING
@@ -176,6 +189,7 @@ class EMAYClient:
 
         device = await BleakScanner.find_device_by_filter(_filter, timeout=10)
         if device is None:
+            self._failure_reason = FailureReason.NOT_FOUND
             self.status = Status.FAILED
             return
         self._known_address = device.address
@@ -191,6 +205,7 @@ class EMAYClient:
         try:
             await client.connect()
         except Exception as e:
+            self._failure_reason = FailureReason.CONNECTION_FAILED
             self.status = Status.FAILED
             logger.error(f"EMAY: connect failed: {e}")
             return
@@ -203,12 +218,14 @@ class EMAYClient:
         # Discover and enable
         svc = client.services.get_service(SERVICE_UUID)
         if svc is None:
+            self._failure_reason = FailureReason.CONNECTION_FAILED
             self.status = Status.FAILED
             logger.error("EMAY: service not found")
             return
         self._write_char = svc.get_characteristic(WRITE_UUID)
         self._notify_char = svc.get_characteristic(NOTIFY_UUID)
         if self._write_char is None or self._notify_char is None:
+            self._failure_reason = FailureReason.CONNECTION_FAILED
             self.status = Status.FAILED
             logger.error("EMAY: characteristics not found")
             return

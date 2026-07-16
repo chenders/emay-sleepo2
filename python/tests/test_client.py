@@ -5,10 +5,10 @@ import logging
 
 import pytest
 
-pytest.importorskip("bleak", reason="client tests need the ble extra")
+pytest.importorskip("bleak", reason="client tests need bleak installed")
 
 from emay_sleepo2.client import EMAYClient  # noqa: E402
-from emay_sleepo2.types import Status  # noqa: E402
+from emay_sleepo2.types import Status, FailureReason  # noqa: E402
 
 
 def test_scan_failure_fires_failed_once(monkeypatch):
@@ -24,6 +24,8 @@ def test_scan_failure_fires_failed_once(monkeypatch):
     asyncio.run(client.start())
 
     assert statuses == [Status.SCANNING, Status.FAILED]
+    assert client.failure_reason == FailureReason.NOT_FOUND
+    assert "connected to another app" in client.failure_reason.message
 
 
 def test_connect_failure_fires_failed_once(monkeypatch):
@@ -51,6 +53,33 @@ def test_connect_failure_fires_failed_once(monkeypatch):
     asyncio.run(client.start())
 
     assert statuses == [Status.SCANNING, Status.CONNECTING, Status.FAILED]
+    assert client.failure_reason == FailureReason.CONNECTION_FAILED
+
+
+def test_failure_reason_defaults_none_and_resets(monkeypatch):
+    """failure_reason is NONE initially and is cleared at the start of start()."""
+
+    async def no_device(*args, **kwargs):
+        return None
+
+    monkeypatch.setattr("emay_sleepo2.client.BleakScanner.find_device_by_filter", no_device)
+
+    client = EMAYClient()
+    assert client.failure_reason == FailureReason.NONE  # default
+
+    asyncio.run(client.start())
+    assert client.failure_reason == FailureReason.NOT_FOUND  # set on failure
+
+    # A fresh start() clears the stale reason before re-scanning.
+    reasons_at_scanning = []
+
+    def capture(status):
+        if status == Status.SCANNING:
+            reasons_at_scanning.append(client.failure_reason)
+
+    client.on_status_change = capture
+    asyncio.run(client.start())
+    assert reasons_at_scanning == [FailureReason.NONE]
 
 
 def test_stop_warns_when_link_stays_up(caplog):

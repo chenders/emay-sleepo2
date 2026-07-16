@@ -39,6 +39,30 @@ struct MinuteSample {
 using ReadingCallback = std::function<void(const Reading&)>;
 using StatusCallback  = std::function<void(const std::string&)>;
 
+/* ---- Failure reason ----
+ * Structured explanation of WHY a session failed. Unlike the Python/Swift
+ * bindings this one reports status as free-form strings via StatusCallback
+ * (there is no Status enum), so FailureReason is a standalone signal: query it
+ * via BLEClient::failure_reason() after start() returns false. It is None
+ * unless a failure occurred. NotFound: the device was never discovered — off,
+ * out of range, or held by another app (the SleepO2 allows only one connection
+ * at a time). ConnectionFailed: found, but connecting failed.
+ */
+enum class FailureReason { None, NotFound, ConnectionFailed };
+
+// Human-readable explanation suitable for showing a user ("" for None).
+inline const char* failure_reason_message(FailureReason reason) {
+    switch (reason) {
+        case FailureReason::NotFound:
+            return "Device not found — it may be off, out of range, or connected to another app (the SleepO2 allows only one connection at a time).";
+        case FailureReason::ConnectionFailed:
+            return "Found the device but the connection failed — it may have moved out of range or been taken by another app mid-connect.";
+        case FailureReason::None:
+            break;
+    }
+    return "";
+}
+
 /* ---- Protocol ---- */
 
 inline constexpr const char* SVC_UUID = "0000ff12-0000-1000-8000-00805f9b34fb";
@@ -87,6 +111,10 @@ public:
 
     bool start();
     void stop();
+
+    // Best-effort reason the last start() failed; None unless start()
+    // returned false due to a failure. Mirrors how status is exposed.
+    FailureReason failure_reason() const;
 
 private:
     struct Impl;

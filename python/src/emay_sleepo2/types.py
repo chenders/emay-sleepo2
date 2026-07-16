@@ -56,6 +56,39 @@ class Status(Enum):
         return self in (Status.SCANNING, Status.CONNECTING, Status.STREAMING)
 
 
+class FailureReason(Enum):
+    """Best-effort reason the client entered :attr:`Status.FAILED`.
+
+    Only meaningful while ``status == Status.FAILED``; otherwise it is
+    :attr:`NONE`. Read it via ``EMAYClient.failure_reason``.
+
+    Note on ``NOT_FOUND``: the SleepO2 is single-connection and stops
+    advertising while connected to another central, so a device that is
+    "connected to another app" is radio-indistinguishable from one that is off
+    or out of range. We therefore cannot report a definitive "busy" — the
+    message enumerates the possibilities honestly.
+    """
+
+    NONE = auto()
+    NOT_FOUND = auto()
+    CONNECTION_FAILED = auto()
+
+    @property
+    def message(self) -> str:
+        """A human-readable explanation suitable for showing a user."""
+        return {
+            FailureReason.NONE: "",
+            FailureReason.NOT_FOUND: (
+                "Device not found — it may be off, out of range, or connected "
+                "to another app (the SleepO2 allows only one connection at a time)."
+            ),
+            FailureReason.CONNECTION_FAILED: (
+                "Found the device but the connection failed — it may have moved "
+                "out of range or been taken by another app mid-connect."
+            ),
+        }[self]
+
+
 @dataclass(frozen=True, slots=True)
 class StatusEvent:
     """A status change event from the client."""

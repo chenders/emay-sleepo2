@@ -85,7 +85,7 @@ bring-your-own-adapter interface in Go).
 ### Python
 
 ```bash
-pip install "emay-sleepo2[ble]"   # BLE streaming (installs bleak)
+pip install emay-sleepo2   # BLE streaming included (installs bleak)
 ```
 
 ```python
@@ -205,10 +205,16 @@ The core surface every binding provides, in its own idiomatic form:
 | `isStreaming` | Whether currently streaming |
 | `onReading` (callback/event) | Fires at ~1 Hz with a new `Reading` |
 | `status` / `onStatusChange` | `Idle \| Scanning \| Connecting \| Streaming \| Failed`, and a hook to observe transitions |
+| `failureReason` | Read alongside `Failed` to see *why*: `NotFound` (device off, out of range, or connected to another app) or `ConnectionFailed` (found, but connect/GATT setup failed). Has a `.message` for display. |
 
 Some bindings expose more (per-minute downsampled averages, configurable
 heartbeat/reconnect behavior) — see the language's own README for its full
 surface.
+
+`failureReason` is a best-effort hint. The SleepO2 is single-connection and
+goes silent while connected to another central, so "connected to another app"
+is indistinguishable from "off / out of range" — see
+[SPEC.md](SPEC.md#failure-reasons-failed) for why.
 
 ## Reading Type
 

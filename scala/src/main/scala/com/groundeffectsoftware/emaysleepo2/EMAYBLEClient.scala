@@ -21,6 +21,25 @@ case class EMAYReading(spo2: Option[Int], pulse: Option[Int], timestampMs: Long)
 
 case class MinuteSample(minuteStartMs: Long, metricType: String, value: Double, unitString: String)
 
+/** Best-effort reason the client's most recent session failed.
+ *
+ *  Reset to [[FailureReason.None]] at the start of each session and set
+ *  immediately before a terminal failure is reported. `NotFound` means the
+ *  device was never discovered (off, out of range, or already connected to
+ *  another app — the SleepO2 is single-connection and stops advertising while
+ *  connected, so these are radio-indistinguishable). `ConnectionFailed` means
+ *  it was found but connecting or GATT setup failed.
+ */
+enum FailureReason:
+  case None, NotFound, ConnectionFailed
+
+  def message: String = this match
+    case FailureReason.None => ""
+    case FailureReason.NotFound =>
+      "Device not found — it may be off, out of range, or connected to another app (the SleepO2 allows only one connection at a time)."
+    case FailureReason.ConnectionFailed =>
+      "Found the device but the connection failed — it may have moved out of range or been taken by another app mid-connect."
+
 /* ---- Protocol ---- */
 
 object EMAYProtocol:
@@ -68,10 +87,19 @@ class EMAYBLEClient(ctx: Context):
   private var callback: Option[(Either[String, EMAYReading]) => Unit] = None
   private val scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
   @volatile private var streaming = false
+  // Written from BLE callback (binder) threads, read by consumers on another
+  // thread; @volatile (matching `streaming` above) guarantees the write is
+  // visible across threads without extra synchronization.
+  @volatile private var _failureReason: FailureReason = FailureReason.None
 
   def onEvent(cb: Either[String, EMAYReading] => Unit): Unit = callback = Some(cb)
 
+  /** Why the most recent session failed. Defaults to [[FailureReason.None]] and
+   *  is reset at the start of every `start()`. */
+  def failureReason: FailureReason = _failureReason
+
   def start(): Unit =
+    _failureReason = FailureReason.None
     val adapter = mgr.getAdapter
     if adapter == null then { emit("no BT adapter"); return }
     emit("scanning")
@@ -94,12 +122,17 @@ class EMAYBLEClient(ctx: Context):
       if newState == BluetoothProfile.STATE_CONNECTED then
         emit("discovering"); g.discoverServices()
       else
+        // A drop before streaming began is a failed connect/setup attempt; a
+        // drop after is an ordinary mid-session disconnect, so only tag the former.
+        if !streaming then _failureReason = FailureReason.ConnectionFailed
         stop(); emit("disconnected")
 
     override def onServicesDiscovered(g: BluetoothGatt, status: Int): Unit =
       val svc = Option(g.getService(EMAYProtocol.SvcUuid))
       svc match
-        case None => emit("service not found")
+        case None =>
+          _failureReason = FailureReason.ConnectionFailed
+          emit("service not found")
         case Some(s) =>
           wrCh  = Option(s.getCharacteristic(EMAYProtocol.WrUuid))
           nfyCh = Option(s.getCharacteristic(EMAYProtocol.NfyUuid))
@@ -118,7 +151,9 @@ class EMAYBLEClient(ctx: Context):
                 () => if streaming && gatt.isDefined then
                   w.setValue(EMAYProtocol.Heartbeat); g.writeCharacteristic(w),
                 1, 1, TimeUnit.SECONDS)
-            case _ => emit("characteristics missing")
+            case _ =>
+              _failureReason = FailureReason.ConnectionFailed
+              emit("characteristics missing")
 
     override def onCharacteristicChanged(g: BluetoothGatt, c: BluetoothGattCharacteristic): Unit =
       if nfyCh.exists(_ == c) then

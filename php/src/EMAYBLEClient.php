@@ -38,6 +38,39 @@ class MinuteSample
     ) {}
 }
 
+/**
+ * Best-effort reason a session entered a failed state.
+ *
+ * Only meaningful while a session has failed; otherwise it is
+ * FailureReason::None. Call message() for user-facing text.
+ *
+ * Note on NotFound: the SleepO2 is single-connection and stops
+ * advertising while connected to another central, so a device that is
+ * "connected to another app" is radio-indistinguishable from one that is
+ * off or out of range. We therefore cannot report a definitive "busy" —
+ * the message enumerates the possibilities honestly.
+ */
+enum FailureReason
+{
+    case None;
+    case NotFound;
+    case ConnectionFailed;
+
+    /** A human-readable explanation suitable for showing a user. */
+    public function message(): string
+    {
+        return match ($this) {
+            self::None => '',
+            self::NotFound =>
+                'Device not found — it may be off, out of range, or connected '
+                . 'to another app (the SleepO2 allows only one connection at a time).',
+            self::ConnectionFailed =>
+                'Found the device but the connection failed — it may have moved '
+                . 'out of range or been taken by another app mid-connect.',
+        };
+    }
+}
+
 /* ---- Protocol ---- */
 
 final class EMAYProtocol

@@ -44,6 +44,13 @@ class EMAYClient(private val context: Context) {
         if (_status != s) { _status = s; onStatusChange?.invoke(s) }
     }
 
+    /**
+     * Best-effort reason the last session entered [EMAYStatus.Failed].
+     * Reset to [FailureReason.None] at the start of [start].
+     */
+    var failureReason: FailureReason = FailureReason.None
+        private set
+
     var latestReading: EMAYReading? = null
         private set
     val isStreaming: Boolean get() = _status == EMAYStatus.Streaming
@@ -79,6 +86,7 @@ class EMAYClient(private val context: Context) {
      */
     fun start(scope: CoroutineScope, address: String? = null) {
         if (_status.isActive) return
+        failureReason = FailureReason.None
         this.scope = scope
         wantScan = true
         if (address != null) knownAddress = address
@@ -142,6 +150,7 @@ class EMAYClient(private val context: Context) {
         handler.postDelayed({
             scanner.stopScan(scanCallback)
             if (_status == EMAYStatus.Scanning) {
+                failureReason = FailureReason.NotFound
                 setStatus(EMAYStatus.Failed)
             }
         }, 10000)
@@ -185,10 +194,14 @@ class EMAYClient(private val context: Context) {
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             val svc = gatt.getService(serviceUUID)
-            if (svc == null) { setStatus(EMAYStatus.Failed); return }
+            if (svc == null) {
+                failureReason = FailureReason.ConnectionFailed
+                setStatus(EMAYStatus.Failed); return
+            }
             writeChar = svc.getCharacteristic(writeUUID)
             notifyChar = svc.getCharacteristic(notifyUUID)
             if (writeChar == null || notifyChar == null) {
+                failureReason = FailureReason.ConnectionFailed
                 setStatus(EMAYStatus.Failed); return
             }
             gatt.setCharacteristicNotification(notifyChar, true)
