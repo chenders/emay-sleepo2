@@ -1,10 +1,10 @@
 # EMAY SleepO2 BLE Protocol Specification
 
-> Reverse-engineered from the EMAY SleepO2's Bluetooth traffic ("S50" firmware). The device is a
-> consumer pulse oximeter (~$30–40) that streams SpO₂ and pulse rate at 1 Hz
-> over Bluetooth Low Energy. As far as we've been able to find, no public
-> documentation existed prior to this. This document is unofficial and not
-> affiliated with EMAY.
+> Reverse-engineered by observing the Bluetooth traffic of an EMAY SleepO2
+> running "S50" firmware. The device is a consumer pulse oximeter (~$30–40)
+> that streams SpO₂ and pulse rate at 1 Hz over Bluetooth Low Energy. As far
+> as we've been able to find, no public documentation existed prior to this.
+> This document is unofficial and not affiliated with EMAY.
 
 **Contents:** [Hardware](#hardware) · [Scope & Compatibility](#scope--compatibility)
 · [GATT Profile](#gatt-profile) · [Command Protocol](#command-protocol) ·
@@ -331,4 +331,4 @@ preserving chronological order and disambiguating it from row 118's
 
 | Version | Date | Change |
 |---------|------|--------|
-| 1.0 | 2026-07-09 | Initial publication. Reverse-engineered and verified against one EMAY SleepO2 unit running "S50" firmware. |
+| 1.0 | 2026-07-09 | Initial publication. Documented from observed Bluetooth traffic and verified against one EMAY SleepO2 unit running "S50" firmware. |
