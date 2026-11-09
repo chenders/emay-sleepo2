@@ -7,6 +7,7 @@ dist/
 build/
 .pytest_cache/
 *.py[cod]
+uv.lock
 
 # Node.js
 node_modules/
@@ -16,6 +17,12 @@ dist/
 # Rust
 target/
 *.rs.bk
+# library crate: lockfile not committed
+Cargo.lock
+
+# Swift
+.build/
+.swiftpm/
 
 # Go
 *.exe
