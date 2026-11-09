@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import threading
 from datetime import datetime
-from typing import List, Optional
 
 from .types import MinuteSample, Reading
 
@@ -23,18 +22,18 @@ class LiveDownsampler:
     def __init__(self, minimum_samples_per_minute: int = 2):
         self.minimum_samples_per_minute = minimum_samples_per_minute
         self._lock = threading.Lock()
-        self._spo2_values: List[float] = []
-        self._pulse_values: List[float] = []
-        self._current_minute: Optional[datetime] = None
+        self._spo2_values: list[float] = []
+        self._pulse_values: list[float] = []
+        self._current_minute: datetime | None = None
 
-    def add(self, reading: Reading) -> List[MinuteSample]:
+    def add(self, reading: Reading) -> list[MinuteSample]:
         """Feed a new reading into the current minute bucket.
 
         Returns any finalized MinuteSamples (typically 0 or 2 per call).
         """
         with self._lock:
             minute = _start_of_minute(reading.timestamp)
-            flushed: List[MinuteSample] = []
+            flushed: list[MinuteSample] = []
 
             if self._current_minute is not None and minute != self._current_minute:
                 flushed = self._finalize_locked()
@@ -46,12 +45,12 @@ class LiveDownsampler:
                 self._pulse_values.append(float(reading.pulse))
             return flushed
 
-    def flush(self) -> List[MinuteSample]:
+    def flush(self) -> list[MinuteSample]:
         """Finalize and return the current partial bucket."""
         with self._lock:
             return self._finalize_locked()
 
-    def _finalize_locked(self) -> List[MinuteSample]:
+    def _finalize_locked(self) -> list[MinuteSample]:
         if self._current_minute is None:
             return []
         minute = self._current_minute
@@ -61,7 +60,7 @@ class LiveDownsampler:
         self._pulse_values = []
         self._current_minute = None
 
-        samples: List[MinuteSample] = []
+        samples: list[MinuteSample] = []
         if len(spo2_vals) >= self.minimum_samples_per_minute:
             mean = sum(spo2_vals) / len(spo2_vals)
             samples.append(MinuteSample(minute_start=minute, metric_type="SpO2", value=mean / 100.0, unit_string="%"))

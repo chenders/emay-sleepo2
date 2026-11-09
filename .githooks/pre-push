@@ -16,10 +16,14 @@ section "Go: fmt + vet + test"
 # ---- Python ----
 section "Python: format + lint + test"
 (
-    cd "$ROOT/python" && ruff format --check src/ tests/ && ruff check src/ tests/ &&
+    cd "$ROOT/python" &&
     if command -v uv &>/dev/null; then
+        # uv installs the ruff version pinned in pyproject.toml, matching CI
+        uv run --extra all ruff format --check src/ tests/ &&
+        uv run --extra all ruff check src/ tests/ &&
         PYTHONPATH=src uv run --extra all python -m pytest tests/ -q
     else
+        ruff format --check src/ tests/ && ruff check src/ tests/ &&
         PYTHONPATH=src python -m pytest tests/ -q
     fi
 ) || FAILED+=("python")

@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum, auto
-from typing import Optional
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,8 +17,8 @@ class Reading:
     saturation or asystole.
     """
 
-    spo2: Optional[int]  # Oxygen saturation percent (0–100)
-    pulse: Optional[int]  # Pulse rate in bpm
+    spo2: int | None  # Oxygen saturation percent (0–100)
+    pulse: int | None  # Pulse rate in bpm
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def __repr__(self) -> str:

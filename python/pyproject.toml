@@ -36,8 +36,8 @@ dependencies = ["bleak>=0.22"]
 # streaming out of the box. The `ble` extra is kept as a no-op alias so any
 # existing `pip install emay-sleepo2[ble]` command keeps working.
 ble = []
-dev = ["pytest", "ruff"]
-all = ["pytest", "ruff"]
+dev = ["pytest", "ruff==0.17.4"]
+all = ["pytest", "ruff==0.17.4"]
 
 [project.urls]
 Homepage = "https://github.com/chenders/emay-sleepo2"

@@ -1,6 +1,7 @@
 """Tests for EMAY downsampler."""
 
 from datetime import datetime
+
 from emay_sleepo2.downsampler import LiveDownsampler
 from emay_sleepo2.types import Reading
 
@@ -21,8 +22,8 @@ def test_two_samples():
     ds.add(_reading(98, 60, second=30))
     ds.add(_reading(96, 62, second=31))
     result = ds.flush()
-    spo2 = [s for s in result if s.metric_type == "SpO2"][0]
-    pulse = [s for s in result if s.metric_type == "PulseRate"][0]
+    spo2 = next(s for s in result if s.metric_type == "SpO2")
+    pulse = next(s for s in result if s.metric_type == "PulseRate")
     assert spo2.value == 0.97
     assert pulse.value == 61.0
 
@@ -63,7 +64,7 @@ def test_spo2_fraction():
     ds = LiveDownsampler(minimum_samples_per_minute=1)
     ds.add(_reading(50, 60))
     result = ds.flush()
-    spo2 = [s for s in result if s.metric_type == "SpO2"][0]
+    spo2 = next(s for s in result if s.metric_type == "SpO2")
     assert spo2.value == 0.50
     assert spo2.unit_string == "%"
 
@@ -72,6 +73,6 @@ def test_pulse_unit():
     ds = LiveDownsampler(minimum_samples_per_minute=1)
     ds.add(_reading(98, 75))
     result = ds.flush()
-    pulse = [s for s in result if s.metric_type == "PulseRate"][0]
+    pulse = next(s for s in result if s.metric_type == "PulseRate")
     assert pulse.value == 75.0
     assert pulse.unit_string == "count/min"

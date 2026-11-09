@@ -7,8 +7,8 @@ import pytest
 
 pytest.importorskip("bleak", reason="client tests need bleak installed")
 
-from emay_sleepo2.client import EMAYClient  # noqa: E402
-from emay_sleepo2.types import Status, FailureReason  # noqa: E402
+from emay_sleepo2.client import EMAYClient
+from emay_sleepo2.types import FailureReason, Status
 
 
 def test_scan_failure_fires_failed_once(monkeypatch):
