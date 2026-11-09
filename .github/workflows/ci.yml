@@ -36,7 +36,7 @@ jobs:
       - name: Install
         run: pip install -e .   # bleak is a core dependency now — no extra needed
       - name: Lint (ruff)
-        run: pip install ruff && ruff check src/ tests/
+        run: pip install ruff==0.17.4 && ruff check src/ tests/   # pinned: new ruff releases add default rules
       - name: Test
         run: pip install pytest && python -m pytest tests/ -v
 

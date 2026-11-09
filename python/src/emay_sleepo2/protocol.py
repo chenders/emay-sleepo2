@@ -8,7 +8,6 @@ byte-manipulation idioms.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import List, Optional
 
 from .types import Reading
 
@@ -26,7 +25,7 @@ STOP_REALTIME: bytes = bytes([0x9B, 0x7F, 0x1A])
 GET_BATTERY: bytes = bytes([0x86, 0x06])
 HEARTBEAT: bytes = bytes([0x9A, 0x1A])
 
-START_SEQUENCE: List[bytes] = [HELLO, DEVICE_STATE, START_REALTIME, GET_BATTERY]
+START_SEQUENCE: list[bytes] = [HELLO, DEVICE_STATE, START_REALTIME, GET_BATTERY]
 
 # ---- Data frame constants ----
 FRAME_LENGTH: int = 8
@@ -57,7 +56,7 @@ def command(payload: bytes) -> bytes:
     return payload + bytes([checksum(payload)])
 
 
-def parse_reading(raw: bytes) -> Optional[Reading]:
+def parse_reading(raw: bytes) -> Reading | None:
     """Attempt to parse an 8-byte raw frame from the BLE notify characteristic.
 
     Returns a Reading on success, or None if the frame
@@ -78,8 +77,8 @@ def parse_reading(raw: bytes) -> Optional[Reading]:
     raw_pr = raw[3]
     raw_spo2 = raw[4]
 
-    pr: Optional[int] = None if raw_pr in _SENTINEL_VALUES else raw_pr
-    spo2: Optional[int] = None if raw_spo2 in _SENTINEL_VALUES else raw_spo2
+    pr: int | None = None if raw_pr in _SENTINEL_VALUES else raw_pr
+    spo2: int | None = None if raw_spo2 in _SENTINEL_VALUES else raw_spo2
 
     # Application-level plausibility bounds
     if pr is not None and (pr < PULSE_MIN_BPM or pr > PULSE_MAX_BPM):

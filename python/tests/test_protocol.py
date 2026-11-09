@@ -1,6 +1,6 @@
 """Tests for EMAY SleepO2 protocol."""
 
-from emay_sleepo2.protocol import parse_reading, checksum
+from emay_sleepo2.protocol import checksum, parse_reading
 
 
 def _frame(pr: int, spo2: int) -> bytes:

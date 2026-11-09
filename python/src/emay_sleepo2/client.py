@@ -4,25 +4,25 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Callable
 from datetime import datetime, timezone
-from typing import Callable, List, Optional
 
 from bleak import BleakClient, BleakScanner
-from bleak.backends.device import BLEDevice
 from bleak.backends.characteristic import BleakGATTCharacteristic
+from bleak.backends.device import BLEDevice
 
+from .downsampler import LiveDownsampler
 from .protocol import (
-    SERVICE_UUID,
-    WRITE_UUID,
-    NOTIFY_UUID,
-    NAME_PREFIX,
     HEARTBEAT,
+    NAME_PREFIX,
+    NOTIFY_UUID,
+    SERVICE_UUID,
     START_SEQUENCE,
     STOP_REALTIME,
+    WRITE_UUID,
     parse_reading,
 )
-from .types import Reading, Status, MinuteSample, FailureReason
-from .downsampler import LiveDownsampler
+from .types import FailureReason, MinuteSample, Reading, Status
 
 logger = logging.getLogger(__name__)
 
@@ -57,23 +57,23 @@ class EMAYClient:
         self.auto_reconnect = auto_reconnect
 
         # Callbacks
-        self.on_reading: Optional[Callable[[Reading], None]] = None
-        self.on_status_change: Optional[Callable[[Status], None]] = None
-        self.on_minute_samples: Optional[Callable[[List[MinuteSample]], None]] = None
+        self.on_reading: Callable[[Reading], None] | None = None
+        self.on_status_change: Callable[[Status], None] | None = None
+        self.on_minute_samples: Callable[[list[MinuteSample]], None] | None = None
 
         # State
         self._status: Status = Status.IDLE
         self._failure_reason: FailureReason = FailureReason.NONE
-        self._latest_reading: Optional[Reading] = None
-        self._last_reading_at: Optional[datetime] = None
-        self._client: Optional[BleakClient] = None
-        self._device: Optional[BLEDevice] = None
-        self._notify_char: Optional[BleakGATTCharacteristic] = None
-        self._write_char: Optional[BleakGATTCharacteristic] = None
-        self._heartbeat_task: Optional[asyncio.Task] = None
+        self._latest_reading: Reading | None = None
+        self._last_reading_at: datetime | None = None
+        self._client: BleakClient | None = None
+        self._device: BLEDevice | None = None
+        self._notify_char: BleakGATTCharacteristic | None = None
+        self._write_char: BleakGATTCharacteristic | None = None
+        self._heartbeat_task: asyncio.Task | None = None
         self._want_scan = False
         self._downsampler = LiveDownsampler()
-        self._known_address: Optional[str] = None
+        self._known_address: str | None = None
 
     @property
     def status(self) -> Status:
@@ -87,7 +87,7 @@ class EMAYClient:
                 self.on_status_change(value)
 
     @property
-    def latest_reading(self) -> Optional[Reading]:
+    def latest_reading(self) -> Reading | None:
         return self._latest_reading
 
     @property
@@ -105,7 +105,7 @@ class EMAYClient:
     def is_streaming(self) -> bool:
         return self._status == Status.STREAMING
 
-    async def start(self, address: Optional[str] = None) -> None:
+    async def start(self, address: str | None = None) -> None:
         """Start monitoring for the oximeter."""
         if self._status.is_active:
             return
@@ -130,7 +130,7 @@ class EMAYClient:
             self._heartbeat_task.cancel()
             try:
                 await self._heartbeat_task
-            except (asyncio.CancelledError, Exception):
+            except (asyncio.CancelledError, Exception):  # noqa: BLE001, S110 - best-effort teardown; heartbeat errors are irrelevant once stopping
                 pass
             self._heartbeat_task = None
         # Keep a local handle: disconnect() fires _on_disconnect, which nulls
@@ -144,14 +144,14 @@ class EMAYClient:
                 )
             except asyncio.TimeoutError:
                 logger.warning("EMAY: STOP_REALTIME write timed out during stop(); tearing down anyway")
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - bleak backends raise heterogeneous errors; teardown must continue
                 logger.warning("EMAY: STOP_REALTIME write failed during stop(): %r", e)
         if client is not None:
             try:
                 await asyncio.wait_for(client.disconnect(), timeout=DISCONNECT_TIMEOUT)
             except asyncio.TimeoutError:
                 logger.warning("EMAY: disconnect() timed out during stop(); resetting state anyway")
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - bleak backends raise heterogeneous errors; state must still reset
                 logger.warning("EMAY: disconnect() raised during stop(): %r", e)
             else:
                 # A clean return does NOT guarantee the link dropped — on some
@@ -204,7 +204,7 @@ class EMAYClient:
         )
         try:
             await client.connect()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - any connect error maps to FailureReason.CONNECTION_FAILED
             self._failure_reason = FailureReason.CONNECTION_FAILED
             self.status = Status.FAILED
             logger.error(f"EMAY: connect failed: {e}")
@@ -275,14 +275,16 @@ class EMAYClient:
             if self._write_char:
                 try:
                     await self._client.write_gatt_char(self._write_char, HEARTBEAT, response=True)
-                except Exception:
+                except Exception:  # noqa: BLE001, S110 - a missed heartbeat is tolerated; the staleness watchdog below catches real drops
                     pass
             # Staleness watchdog
-            if self._last_reading_at is not None:
-                if (datetime.now(timezone.utc) - self._last_reading_at).total_seconds() > self.stale_timeout:
-                    if self._latest_reading is not None:
-                        self._latest_reading = None
-                        self._downsampler.flush()
+            if (
+                self._last_reading_at is not None
+                and (datetime.now(timezone.utc) - self._last_reading_at).total_seconds() > self.stale_timeout
+                and self._latest_reading is not None
+            ):
+                self._latest_reading = None
+                self._downsampler.flush()
 
     def _reset_connection_state(self) -> None:
         if self._heartbeat_task:
